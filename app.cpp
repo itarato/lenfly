@@ -31,7 +31,7 @@
 #define POOP_CREATION_CHANCE 1
 
 #define SCORE_BERRY 10
-#define SCORE_BERRY_MISS -5
+#define SCORE_BERRY_MISS 0
 #define SCORE_POOP -30
 
 #define IMG_VEGETATION "resources/images/vegetation.png"
@@ -108,9 +108,24 @@ void App::run() {
 }
 
 void App::handle_state() {
+  int touch_count = GetTouchPointsCount();
+
   if (state == STATE_MENU) {
     if (IsKeyPressed(KEY_ENTER)) {
       init_game_state();
+    }
+
+    if (touch_count > 0) {
+      Vector2 current_touch = GetTouchPosition(0);
+
+      int play_title_width = MeasureText("PLAY", 64);
+      Rectangle play_button_rect{
+          (float)(GetScreenWidth() >> 1) - (play_title_width >> 1),
+          (float)(GetScreenHeight() >> 1) - 32, (float)play_title_width, 64.0f};
+
+      if (CheckCollisionPointRec(current_touch, play_button_rect)) {
+        init_game_state();
+      }
     }
   } else {
     UpdateMusicStream(background_music);
@@ -130,8 +145,6 @@ void App::handle_state() {
     }
 
     if (mouse_enabled) {
-      int touch_count = GetTouchPointsCount();
-
       if (touch_count == 0) {
         last_touch.reset();
       } else {
