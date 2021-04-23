@@ -77,8 +77,11 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   score = 0;
 
   gravity_enabled = false;
+#if defined(PLATFORM_ANDROID)
   mouse_enabled = true;
-  debug_window_enabled = false;
+#else
+  mouse_enabled = false;
+#endif
 
   plane.init(&textures["plane"]);
 
@@ -121,7 +124,6 @@ void App::handle_state() {
   if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
   if (IsKeyPressed(KEY_G)) gravity_enabled = !gravity_enabled;
   if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
-  if (IsKeyPressed(KEY_D)) debug_window_enabled = !debug_window_enabled;
 
   if (gravity_enabled) {
     if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
