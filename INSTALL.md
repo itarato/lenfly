@@ -1,7 +1,7 @@
 Install
 -------
 
-Compile Raylib:
+## Compile project for Android:
 
 ```bash
 cd libs/raylib/src
@@ -12,4 +12,10 @@ Compile code:
 
 ```bash
 make -f Makefile.Android.Linux clean && make -f Makefile.Android.Linux
+```
+
+## Compile project for desktop
+
+```bash
+make
 ```
