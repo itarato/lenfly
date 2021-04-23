@@ -10,6 +10,11 @@
 #include "raylib.h"
 #include "screen_objects.h"
 
+typedef enum {
+  STATE_MENU = 0,
+  STATE_GAME = 1,
+} GameState;
+
 class App {
  private:
   Music background_music;
@@ -22,6 +27,8 @@ class App {
   bool debug_window_enabled;
   int score;
   std::optional<Vector2> last_touch;
+  GameState state;
+  int life_count;
 
   std::map<std::string, Texture2D> textures;
 
@@ -33,6 +40,9 @@ class App {
 
   void draw();
   void handle_state();
+  int max_poop();
+  void init_game_state();
+  void init_menu_state();
 
  public:
   App();

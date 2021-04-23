@@ -74,15 +74,6 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
 
   srand(time(NULL));
 
-  score = 0;
-
-  gravity_enabled = false;
-#if defined(PLATFORM_ANDROID)
-  mouse_enabled = true;
-#else
-  mouse_enabled = false;
-#endif
-
   plane.init(&textures["plane"]);
 
   vegetation.init(&textures["vegetation"]);
@@ -93,7 +84,10 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   reset();
 }
 
-void App::reset() { plane.reset(); }
+void App::reset() {
+  score = 0;
+  init_menu_state();
+}
 
 void App::run() {
   while (!WindowShouldClose()) {
@@ -106,9 +100,6 @@ void App::run() {
     {
       ClearBackground(RAYWHITE);
 
-      UpdateMusicStream(background_music);
-      UpdateMusicStream(engine_sound);
-
       draw();
     }
 
@@ -117,171 +108,178 @@ void App::run() {
 }
 
 void App::handle_state() {
-  if (IsKeyPressed(KEY_R)) reset();
-  if (IsKeyDown(KEY_UP)) plane.entity.pos.y -= PLANE_MOVE_V;
-  if (IsKeyDown(KEY_DOWN)) plane.entity.pos.y += PLANE_MOVE_V;
-  if (IsKeyDown(KEY_LEFT)) plane.entity.pos.x -= PLANE_MOVE_V;
-  if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
-  if (IsKeyPressed(KEY_G)) gravity_enabled = !gravity_enabled;
-  if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
+  if (state == STATE_MENU) {
+    if (IsKeyPressed(KEY_ENTER)) {
+      init_game_state();
+    }
+  } else {
+    UpdateMusicStream(background_music);
+    UpdateMusicStream(engine_sound);
 
-  if (gravity_enabled) {
-    if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
-    plane.entity.pos.y += plane.gravity.update();
-  }
+    if (IsKeyPressed(KEY_R)) reset();
+    if (IsKeyDown(KEY_UP)) plane.entity.pos.y -= PLANE_MOVE_V;
+    if (IsKeyDown(KEY_DOWN)) plane.entity.pos.y += PLANE_MOVE_V;
+    if (IsKeyDown(KEY_LEFT)) plane.entity.pos.x -= PLANE_MOVE_V;
+    if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
+    if (IsKeyPressed(KEY_G)) gravity_enabled = !gravity_enabled;
+    if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
 
-  if (mouse_enabled) {
-    int touch_count = GetTouchPointsCount();
+    if (gravity_enabled) {
+      if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
+      plane.entity.pos.y += plane.gravity.update();
+    }
 
-    if (touch_count == 0) {
-      last_touch.reset();
-    } else {
-      Vector2 current_touch = GetTouchPosition(0);
+    if (mouse_enabled) {
+      int touch_count = GetTouchPointsCount();
 
-      if (!last_touch.has_value()) {
-        last_touch = current_touch;
+      if (touch_count == 0) {
+        last_touch.reset();
       } else {
-        plane.entity.pos.x +=
-            std::max(-CTRL_MAX_SPEED,
-                     std::min(CTRL_MAX_SPEED,
-                              (current_touch.x - last_touch.value().x) / 4.0f));
-        plane.entity.pos.y +=
-            std::max(-CTRL_MAX_SPEED,
-                     std::min(CTRL_MAX_SPEED,
-                              (current_touch.y - last_touch.value().y) / 4.0f));
+        Vector2 current_touch = GetTouchPosition(0);
+
+        if (!last_touch.has_value()) {
+          last_touch = current_touch;
+        } else {
+          plane.entity.pos.x += std::max(
+              -CTRL_MAX_SPEED,
+              std::min(CTRL_MAX_SPEED,
+                       (current_touch.x - last_touch.value().x) / 4.0f));
+          plane.entity.pos.y += std::max(
+              -CTRL_MAX_SPEED,
+              std::min(CTRL_MAX_SPEED,
+                       (current_touch.y - last_touch.value().y) / 4.0f));
+        }
+
+        plane.entity.pos.x = std::max(0, (int)plane.entity.pos.x);
+        plane.entity.pos.y = std::max(0, (int)plane.entity.pos.y);
+        plane.entity.pos.x = std::min(GetScreenWidth() - plane.texture->width,
+                                      (int)plane.entity.pos.x);
+        plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
+                                      (int)plane.entity.pos.y);
+      }
+    }
+
+    if (clouds.size() < MAX_CLOUDS) {
+      if (rand() % 100 < CLOUD_CREATION_CHANCE) {
+        Cloud cloud(
+            -(float)((rand() % (int)(CLOUD_V_MAX - CLOUD_V_MIN)) + CLOUD_V_MIN),
+            &textures["cloud"]);
+        clouds.push_back(std::move(cloud));
+      }
+    }
+
+    clouds.erase(std::remove_if(clouds.begin(), clouds.end(),
+                                [](auto cloud) { return cloud.should_die(); }),
+                 clouds.end());
+
+    if (berries.size() < MAX_BERRY) {
+      if (rand() % 100 < BERRY_CREATION_CHANCE) {
+        ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
+        berries.push_back(std::move(new_berry));
+      }
+    }
+
+    if (poops.size() < max_poop()) {
+      if (rand() % 100 < POOP_CREATION_CHANCE) {
+        ConsumableItem new_poop(-POOP_V, &textures["poop"]);
+        poops.push_back(std::move(new_poop));
+      }
+    }
+
+    Rectangle plane_rect{plane.entity.pos.x, plane.entity.pos.y,
+                         (float)plane.texture->width,
+                         (float)plane.texture->height};
+
+    for (auto& berry : berries) {
+      Rectangle berry_rect{berry.entity.pos.x, berry.entity.pos.y,
+                           (float)berry.texture->width,
+                           (float)berry.texture->height};
+
+      if (CheckCollisionRecs(plane_rect, berry_rect)) {
+        score += SCORE_BERRY;
+        berry.consume();
+        StopSound(sounds["plop"]);
+        PlaySound(sounds["plop"]);
       }
 
-      plane.entity.pos.x = std::max(0, (int)plane.entity.pos.x);
-      plane.entity.pos.y = std::max(0, (int)plane.entity.pos.y);
-      plane.entity.pos.x = std::min(GetScreenWidth() - plane.texture->width,
-                                    (int)plane.entity.pos.x);
-      plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
-                                    (int)plane.entity.pos.y);
+      if (berry.out_of_screen()) {
+        score += SCORE_BERRY_MISS;
+      }
+    }
+
+    for (auto& poop : poops) {
+      Rectangle poop_rect{poop.entity.pos.x, poop.entity.pos.y,
+                          (float)poop.texture->width,
+                          (float)poop.texture->height};
+
+      if (CheckCollisionRecs(plane_rect, poop_rect)) {
+        score += SCORE_POOP;
+        poop.consume();
+        plane.penalty_color.activate();
+        StopSound(sounds["ouch"]);
+        PlaySound(sounds["ouch"]);
+        life_count--;
+      }
+    }
+
+    plane.penalty_color.update();
+
+    berries.erase(
+        std::remove_if(berries.begin(), berries.end(),
+                       [](const auto& berry) { return berry.should_die(); }),
+        berries.end());
+    poops.erase(
+        std::remove_if(poops.begin(), poops.end(),
+                       [](const auto& poop) { return poop.should_die(); }),
+        poops.end());
+
+    if (life_count < 0) {
+      init_menu_state();
     }
   }
-
-  if (clouds.size() < MAX_CLOUDS) {
-    if (rand() % 100 < CLOUD_CREATION_CHANCE) {
-      Cloud cloud(
-          -(float)((rand() % (int)(CLOUD_V_MAX - CLOUD_V_MIN)) + CLOUD_V_MIN),
-          &textures["cloud"]);
-      clouds.push_back(std::move(cloud));
-    }
-  }
-
-  clouds.erase(std::remove_if(clouds.begin(), clouds.end(),
-                              [](auto cloud) { return cloud.should_die(); }),
-               clouds.end());
-
-  if (berries.size() < MAX_BERRY) {
-    if (rand() % 100 < BERRY_CREATION_CHANCE) {
-      ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
-      berries.push_back(std::move(new_berry));
-    }
-  }
-
-  if (poops.size() < MAX_POOPS) {
-    if (rand() % 100 < POOP_CREATION_CHANCE) {
-      ConsumableItem new_poop(-POOP_V, &textures["poop"]);
-      poops.push_back(std::move(new_poop));
-    }
-  }
-
-  Rectangle plane_rect{plane.entity.pos.x, plane.entity.pos.y,
-                       (float)plane.texture->width,
-                       (float)plane.texture->height};
-
-  for (auto& berry : berries) {
-    Rectangle berry_rect{berry.entity.pos.x, berry.entity.pos.y,
-                         (float)berry.texture->width,
-                         (float)berry.texture->height};
-
-    if (CheckCollisionRecs(plane_rect, berry_rect)) {
-      score += SCORE_BERRY;
-      berry.consume();
-      StopSound(sounds["plop"]);
-      PlaySound(sounds["plop"]);
-    }
-
-    if (berry.out_of_screen()) {
-      score += SCORE_BERRY_MISS;
-    }
-  }
-
-  for (auto& poop : poops) {
-    Rectangle poop_rect{poop.entity.pos.x, poop.entity.pos.y,
-                        (float)poop.texture->width,
-                        (float)poop.texture->height};
-
-    if (CheckCollisionRecs(plane_rect, poop_rect)) {
-      score += SCORE_POOP;
-      poop.consume();
-      plane.penalty_color.activate();
-      StopSound(sounds["ouch"]);
-      PlaySound(sounds["ouch"]);
-    }
-  }
-
-  plane.penalty_color.update();
-
-  berries.erase(
-      std::remove_if(berries.begin(), berries.end(),
-                     [](const auto& berry) { return berry.should_die(); }),
-      berries.end());
-  poops.erase(
-      std::remove_if(poops.begin(), poops.end(),
-                     [](const auto& poop) { return poop.should_die(); }),
-      poops.end());
 }
 
 void App::draw() {
-  mountains.draw_and_move(GetScreenHeight() - (mountains.texture->height));
-  vegetation.draw_and_move(GetScreenHeight() -
-                           (vegetation.texture->height / 4 * 3));
+  if (state == STATE_MENU) {
+    int play_title_width = MeasureText("PLAY", 64);
+    DrawText("PLAY", (GetScreenWidth() >> 1) - (play_title_width >> 1),
+             (GetScreenHeight() >> 1) - 32, 64, DARKGRAY);
 
-  for (Cloud& cloud : clouds) {
-    DrawTexture(*cloud.texture, cloud.entity.pos.x, cloud.entity.pos.y,
-                Fade(WHITE, cloud.fade));
-    cloud.update();
+    if (score != 0) {
+      const char* score_title = TextFormat("Score: %d", score);
+      int score_title_width = MeasureText(score_title, 64);
+      DrawText(score_title, (GetScreenWidth() >> 1) - (score_title_width >> 1),
+               (GetScreenHeight() >> 1) + 128, 64, DARKGRAY);
+    }
+  } else if (state == STATE_GAME) {
+    mountains.draw_and_move(GetScreenHeight() - (mountains.texture->height));
+    vegetation.draw_and_move(GetScreenHeight() -
+                             (vegetation.texture->height / 4 * 3));
+
+    for (Cloud& cloud : clouds) {
+      DrawTexture(*cloud.texture, cloud.entity.pos.x, cloud.entity.pos.y,
+                  Fade(WHITE, cloud.fade));
+      cloud.update();
+    }
+
+    DrawTexture(*plane.texture, plane.entity.pos.x, plane.entity.pos.y,
+                plane.penalty_color.tint());
+
+    for (auto& berry : berries) {
+      DrawTexture(*berry.texture, berry.entity.pos.x, berry.entity.pos.y,
+                  WHITE);
+      berry.update();
+    }
+    for (auto& poop : poops) {
+      DrawTexture(*poop.texture, poop.entity.pos.x, poop.entity.pos.y, WHITE);
+      poop.update();
+    }
+
+    DrawFPS(GetScreenWidth() - 128, 8);
+
+    DrawText(TextFormat("Score: %d | Life: %d", score, life_count), 8, 8, 64,
+             DARKGRAY);
   }
-
-  DrawTexture(*plane.texture, plane.entity.pos.x, plane.entity.pos.y,
-              plane.penalty_color.tint());
-
-  for (auto& berry : berries) {
-    DrawTexture(*berry.texture, berry.entity.pos.x, berry.entity.pos.y, WHITE);
-    berry.update();
-  }
-  for (auto& poop : poops) {
-    DrawTexture(*poop.texture, poop.entity.pos.x, poop.entity.pos.y, WHITE);
-    poop.update();
-  }
-
-  DrawFPS(GetScreenWidth() - 128, 8);
-
-  DrawText(TextFormat("Score: %d", score), 8, 8, 64, DARKGRAY);
-
-  // Ctrl aid.
-  // if (last_touch.has_value()) {
-  //   DrawCircle(last_touch.value().x, last_touch.value().y,
-  //              GetScreenHeight() * CTRL_SIZE, Fade(DARKGREEN, 0.3f));
-  //   DrawLineEx(last_touch.value(), GetTouchPosition(0), 12, DARKGREEN);
-  // }
-
-  // DrawText(
-  //     TextFormat("ScreenW: %d ScreenH: %d MouseX: %d MouseY: %d",
-  //                GetScreenWidth(), GetScreenHeight(), GetMouseX(),
-  //                GetMouseY()),
-  //     8, 100, 40, DARKGRAY);
-  // DrawText(
-  //     TextFormat("MonitorC: %d MonitorW: %d MonitorH: %d TouchX: %d TouchY:
-  //     %d",
-  //                GetMonitorCount(), GetMonitorWidth(0), GetMonitorHeight(0),
-  //                GetTouchX(), GetTouchY()),
-  //     8, 160, 40, DARKGRAY);
-  // DrawText(TextFormat("Touch point count: %d", GetTouchPointsCount()), 8,
-  // 220,
-  //          40, DARKGRAY);
 }
 
 App::~App() {
@@ -299,3 +297,23 @@ App::~App() {
   CloseAudioDevice();
   CloseWindow();
 }
+
+int App::max_poop() { return score / 100 + MAX_POOPS; }
+
+void App::init_game_state() {
+  plane.reset();
+
+  gravity_enabled = false;
+#if defined(PLATFORM_ANDROID)
+  mouse_enabled = true;
+#else
+  mouse_enabled = false;
+#endif
+
+  life_count = 3;
+  score = 0;
+
+  state = STATE_GAME;
+}
+
+void App::init_menu_state() { state = STATE_MENU; }
