@@ -16,3 +16,5 @@ typedef struct {
   float x;
   float y;
 } Point;
+
+bool has_chance(int chance);

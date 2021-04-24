@@ -24,6 +24,7 @@ struct Plane {
   Entity entity;
   Gravity gravity;
   PenaltyColor penalty_color;
+  bool gravity_enabled;
 
   Plane();
   ~Plane();

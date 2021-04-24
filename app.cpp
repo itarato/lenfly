@@ -151,10 +151,10 @@ void App::handle_state() {
     if (IsKeyDown(KEY_DOWN)) plane.entity.pos.y += PLANE_MOVE_V;
     if (IsKeyDown(KEY_LEFT)) plane.entity.pos.x -= PLANE_MOVE_V;
     if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
-    if (IsKeyPressed(KEY_G)) gravity_enabled = !gravity_enabled;
+    if (IsKeyPressed(KEY_G)) plane.gravity_enabled = !plane.gravity_enabled;
     if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
 
-    if (gravity_enabled) {
+    if (plane.gravity_enabled) {
       if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
       plane.entity.pos.y += plane.gravity.update();
     }
@@ -181,7 +181,7 @@ void App::handle_state() {
     }
 
     if (clouds.size() < MAX_CLOUDS) {
-      if (rand() % 100 < CLOUD_CREATION_CHANCE) {
+      if (has_chance(CLOUD_CREATION_CHANCE)) {
         Cloud cloud(
             -(float)((rand() % (int)(CLOUD_V_MAX - CLOUD_V_MIN)) + CLOUD_V_MIN),
             &textures["cloud"]);
@@ -194,9 +194,9 @@ void App::handle_state() {
                  clouds.end());
 
     if (berries.size() < MAX_BERRY) {
-      if (rand() % 100 < BERRY_CREATION_CHANCE) {
+      if (has_chance(BERRY_CREATION_CHANCE)) {
         Texture2D* berry_texture = nullptr;
-        if (rand() % 100 <= BERRY_BONUS_CHANCE) {
+        if (has_chance(BERRY_BONUS_CHANCE)) {
           berry_texture = &textures["raspberry"];
         } else {
           berry_texture = &textures["berry"];
@@ -212,14 +212,14 @@ void App::handle_state() {
       }
     }
 
-    if (berry_burst > 0 && (rand() % 100 < BERRY_BURST_CHANCE)) {
+    if (berry_burst > 0 && (has_chance(BERRY_BURST_CHANCE))) {
       ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
       berries.push_back(std::move(new_berry));
       berry_burst--;
     }
 
     if ((int)poops.size() < max_poop()) {
-      if (rand() % 100 < POOP_CREATION_CHANCE) {
+      if (has_chance(POOP_CREATION_CHANCE)) {
         ConsumableItem new_poop(-POOP_V, &textures["poop"]);
         poops.push_back(std::move(new_poop));
       }
@@ -367,7 +367,6 @@ int App::max_poop() { return score / 100 + MAX_POOPS; }
 void App::init_game_state() {
   plane.reset();
 
-  gravity_enabled = false;
 #if defined(PLATFORM_ANDROID)
   mouse_enabled = true;
 #else

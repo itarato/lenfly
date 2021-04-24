@@ -33,6 +33,7 @@ void Plane::reset() {
   entity.pos.y = 0.0;
   gravity.v = 0.0;
   penalty_color.reset();
+  gravity_enabled = false;
 }
 
 Plane::~Plane() {}
@@ -62,7 +63,7 @@ void Background::draw_and_move(int pos_y) {
 /// CONSUMABLE ITEM ///////////////////////////////////////////////////////////
 
 ConsumableItem::ConsumableItem(float vx, Texture2D* texture)
-    : texture(texture), consumed(false), color(WHITE), flags(0) {
+    : color(WHITE), texture(texture), consumed(false), flags(0) {
   entity.vx = vx;
   entity.pos.x = GetScreenWidth();
   entity.pos.y = (rand() % GetScreenHeight()) - (texture->height / 2);

@@ -22,7 +22,6 @@ class App {
   Plane plane;
   Background vegetation;
   Background mountains;
-  bool gravity_enabled;
   bool mouse_enabled;
   bool debug_window_enabled;
   int score;
