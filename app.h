@@ -37,9 +37,10 @@ class App {
   std::vector<Cloud> clouds;
   std::vector<ConsumableItem> berries;
   std::vector<ConsumableItem> poops;
-  // std::vector<Cons
+  std::vector<ConsumableItem> boss_treats;
   std::optional<ConsumableItem> life;
   std::optional<ConsumableItem> carrot;
+  Boss boss;
 
   std::map<std::string, Sound> sounds;
 

@@ -39,6 +39,18 @@ struct Plane {
   void shield_enable();
 };
 
+struct Boss {
+ public:
+  Entity entity;
+  Texture2D* texture;
+  Boss();
+  ~Boss();
+  void init(Texture2D*);
+  void update();
+  int life;
+  void reset();
+};
+
 struct Background {
  public:
   Entity entity;

@@ -39,8 +39,9 @@
 #define SCORE_BERRY_MISS 0
 #define SCORE_POOP -30
 
-#define BOSS_FIGHT_SCORE_INIT 10
+#define BOSS_FIGHT_SCORE_INIT 0
 #define BOSS_FIGHT_SCORE_JUMP 1000
+#define BOSS_TREAT_V 20
 
 #define CARROT_V 8
 #define CARROT_CREATION_CHANCE 1
@@ -55,6 +56,8 @@
 #define IMG_RASPBERRY "resources/images/raspberry.png"
 #define IMG_CARROT "resources/images/carrot.png"
 #define IMG_BUBBLE "resources/images/bubble.png"
+#define IMG_CHICKEN "resources/images/chicken.png"
+#define IMG_BOSS "resources/images/boss.png"
 
 #define CTRL_SIZE 0.06f
 #define CTRL_MAX_SPEED 13.0f
@@ -88,6 +91,8 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   textures.insert({"raspberry", LoadTexture(IMG_RASPBERRY)});
   textures.insert({"carrot", LoadTexture(IMG_CARROT)});
   textures.insert({"bubble", LoadTexture(IMG_BUBBLE)});
+  textures.insert({"chicken", LoadTexture(IMG_CHICKEN)});
+  textures.insert({"boss", LoadTexture(IMG_BOSS)});
 
   sounds.insert({"plop", LoadSound("resources/audio/bogyo.mp3")});
   SetSoundVolume(sounds["plop"], 1.0f);
@@ -106,6 +111,9 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   last_touch.reset();
   life.reset();
   carrot.reset();
+
+  boss.init(&textures["boss"]);
+  boss.reset();
 
   reset();
 }
@@ -299,7 +307,19 @@ void App::handle_state() {
   }
   
   if (state == STATE_BOSS) {
+    int gesture = GetGestureDetected();
+    if (gesture == GESTURE_TAP) {
+      ConsumableItem boss_treat{{0.0f, BOSS_TREAT_V}, &textures["chicken"]};
+      boss_treat.entity.pos.x = plane.entity.pos.x + plane.texture->width / 2;
+      boss_treat.entity.pos.y = plane.entity.pos.y + plane.texture->height - 30;
+      boss_treats.push_back(boss_treat);
+    }
 
+    boss_treats.erase(std::remove_if(boss_treats.begin(), boss_treats.end(),
+                                     [](const auto& boss_treat) {
+                                       return boss_treat.should_die();
+                                     }),
+                      boss_treats.end());
   }
 
   if (state == STATE_GAME || state == STATE_BOSS) {
@@ -360,7 +380,7 @@ void App::draw() {
                (GetScreenHeight() >> 1) + 128, 64, DARKGRAY);
     }
   }
-  
+
   if (state == STATE_GAME || state == STATE_BOSS) {
     mountains.draw_and_move(GetScreenHeight() - (mountains.texture->height));
     vegetation.draw_and_move(GetScreenHeight() -
@@ -371,7 +391,20 @@ void App::draw() {
                   Fade(WHITE, cloud.fade));
       cloud.update();
     }
+  }
 
+  if (state == STATE_BOSS) {
+    for (auto& boss_treat : boss_treats) {
+      DrawTexture(*boss_treat.texture, boss_treat.entity.pos.x,
+                  boss_treat.entity.pos.y, WHITE);
+      boss_treat.update();
+    }
+
+    DrawTexture(*boss.texture, boss.entity.pos.x, boss.entity.pos.y, WHITE);
+    boss.update();
+  }
+
+  if (state == STATE_GAME || state == STATE_BOSS) {
     {  // Plane.
       DrawTexture(*plane.texture, plane.entity.pos.x, plane.entity.pos.y,
                   plane.penalty_color.tint());
@@ -410,10 +443,6 @@ void App::draw() {
 
     DrawText(TextFormat("Score: %d | Life: %d", score, life_count), 8, 8, 64,
              DARKGRAY);
-  }
-  
-  if (state == STATE_BOSS) {
-    
   }
 }
 

@@ -2,6 +2,7 @@
 
 #include <stdlib.h>
 
+#include <algorithm>
 #include <iostream>
 
 #include "common.h"
@@ -9,6 +10,8 @@
 
 #define SHIELD_LIFESPAN 400
 #define SHIELD_END_WARNING 150
+
+#define BOSS_LIFE 20
 
 /// CLOUD /////////////////////////////////////////////////////////////////////
 
@@ -65,6 +68,26 @@ bool Plane::shielded() { return shield > 0; }
 
 void Plane::shield_enable() { shield = SHIELD_LIFESPAN; }
 
+/// BOSS //////////////////////////////////////////////////////////////////////
+
+Boss::Boss() { reset(); }
+
+void Boss::init(Texture2D* new_texture) { texture = new_texture; }
+
+Boss::~Boss() {}
+
+void Boss::update() {
+  entity.pos.x += (rand() % 17) - 8;
+  entity.pos.x = std::min(GetScreenWidth() - texture->width, (int)entity.pos.x);
+  entity.pos.x = std::max(0, (int)entity.pos.x);
+}
+
+void Boss::reset() {
+  life = BOSS_LIFE;
+  entity.pos.x = GetScreenWidth() / 2;
+  entity.pos.y = GetScreenHeight() - (texture->height / 5 * 4);
+}
+
 /// MOVABLE IMAGE /////////////////////////////////////////////////////////////
 
 void Background::init(Texture2D* _texture) { texture = _texture; }
@@ -107,7 +130,7 @@ void ConsumableItem::update() {
 bool ConsumableItem::should_die() const { return consumed || out_of_screen(); }
 
 bool ConsumableItem::out_of_screen() const {
-  return entity.pos.x <= -texture->width;
+  return entity.pos.x <= -texture->width || entity.pos.y >= GetScreenHeight();
 }
 
 void ConsumableItem::consume() { consumed = true; }
