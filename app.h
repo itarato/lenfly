@@ -23,7 +23,6 @@ class App {
   Background vegetation;
   Background mountains;
   bool mouse_enabled;
-  bool debug_window_enabled;
   int score;
   std::optional<Vector2> last_touch;
   GameState state;

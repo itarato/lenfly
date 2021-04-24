@@ -91,6 +91,9 @@ APP_VERSION_NAME ?= 1.0
 APP_ICON_LDPI ?= resources/images/logo-36.png
 APP_ICON_MDPI ?= resources/images/logo-48.png
 APP_ICON_HDPI ?= resources/images/logo-72.png
+APP_ICON_XHDPI ?= resources/images/logo-96.png
+APP_ICON_XXHDPI ?= resources/images/logo-144.png
+APP_ICON_XXXHDPI ?= resources/images/logo-192.png
 APP_SCREEN_ORIENTATION ?= landscape
 APP_KEYSTORE_PASS ?= raylib
 
@@ -198,6 +201,9 @@ create_temp_project_dirs:
 	  mkdir -p $(PROJECT_BUILD_PATH)/res/drawable-ldpi; \
 	  mkdir -p $(PROJECT_BUILD_PATH)/res/drawable-mdpi; \
 	  mkdir -p $(PROJECT_BUILD_PATH)/res/drawable-hdpi; \
+	  mkdir -p $(PROJECT_BUILD_PATH)/res/drawable-xhdpi; \
+	  mkdir -p $(PROJECT_BUILD_PATH)/res/drawable-xxhdpi; \
+	  mkdir -p $(PROJECT_BUILD_PATH)/res/drawable-xxxhdpi; \
 	  mkdir -p $(PROJECT_BUILD_PATH)/res/values; \
 	  mkdir -p $(PROJECT_BUILD_PATH)/assets/$(PROJECT_RESOURCES_PATH); \
 	  $(foreach dir, $(PROJECT_SOURCE_DIRS), mkdir -p $(PROJECT_BUILD_PATH)/obj/$(dir) ); \
@@ -246,6 +252,9 @@ copy_project_resources:
 	cp $(APP_ICON_LDPI) $(PROJECT_BUILD_PATH)/res/drawable-ldpi/icon.png
 	cp $(APP_ICON_MDPI) $(PROJECT_BUILD_PATH)/res/drawable-mdpi/icon.png
 	cp $(APP_ICON_HDPI) $(PROJECT_BUILD_PATH)/res/drawable-hdpi/icon.png
+	cp $(APP_ICON_XHDPI) $(PROJECT_BUILD_PATH)/res/drawable-xhdpi/icon.png
+	cp $(APP_ICON_XXHDPI) $(PROJECT_BUILD_PATH)/res/drawable-xxhdpi/icon.png
+	cp $(APP_ICON_XXXHDPI) $(PROJECT_BUILD_PATH)/res/drawable-xxxhdpi/icon.png
 	@echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
 	   <resources>\n\
 	       <string name=\"app_name\">\n\
