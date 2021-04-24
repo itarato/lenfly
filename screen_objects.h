@@ -19,6 +19,8 @@ struct Cloud {
 
 struct Plane {
  private:
+  int shield;
+
  public:
   Texture2D* texture;
   Entity entity;
@@ -31,6 +33,10 @@ struct Plane {
   void reset();
   void init(Texture2D* texture);
   Rectangle rect();
+  bool shielded();
+  void update();
+  Color shield_color();
+  void shield_enable();
 };
 
 struct Background {

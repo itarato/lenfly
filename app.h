@@ -37,6 +37,7 @@ class App {
   std::vector<ConsumableItem> berries;
   std::vector<ConsumableItem> poops;
   std::optional<ConsumableItem> life;
+  std::optional<ConsumableItem> carrot;
 
   std::map<std::string, Sound> sounds;
 

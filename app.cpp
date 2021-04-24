@@ -14,7 +14,7 @@
 
 #define MAX_CLOUDS 5
 // Chance in percentage [0..100).
-#define CLOUD_CREATION_CHANCE 5
+#define CLOUD_CREATION_CHANCE 50
 #define CLOUD_V_MIN 4.0f
 #define CLOUD_V_MAX 20.0f
 
@@ -24,20 +24,23 @@
 #define MAX_BERRY 4
 #define BERRY_V 10.0f
 // Chance in percentage [0..100).
-#define BERRY_CREATION_CHANCE 3
-#define BERRY_BONUS_CHANCE 0
-#define BERRY_BURST 42
-#define BERRY_BURST_CHANCE 30
+#define BERRY_CREATION_CHANCE 30
+#define BERRY_BONUS_CHANCE 50
+#define BERRY_BURST 16
+#define BERRY_BURST_CHANCE 300
 
 #define CONSUMABLE_ITEM_FLAG_BERRY_BONUS 1
 
 #define MAX_POOPS 2
 #define POOP_V 6.0f
-#define POOP_CREATION_CHANCE 1
+#define POOP_CREATION_CHANCE 30
 
 #define SCORE_BERRY 10
 #define SCORE_BERRY_MISS 0
 #define SCORE_POOP -30
+
+#define CARROT_V 8
+#define CARROT_CREATION_CHANCE 1
 
 #define IMG_VEGETATION "resources/images/vegetation.png"
 #define IMG_MOUNTAINS "resources/images/mountains.png"
@@ -47,6 +50,8 @@
 #define IMG_POOP "resources/images/poop.png"
 #define IMG_LIFE "resources/images/life.png"
 #define IMG_RASPBERRY "resources/images/raspberry.png"
+#define IMG_CARROT "resources/images/carrot.png"
+#define IMG_BUBBLE "resources/images/bubble.png"
 
 #define CTRL_SIZE 0.06f
 #define CTRL_MAX_SPEED 13.0f
@@ -78,6 +83,8 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   textures.insert({"poop", LoadTexture(IMG_POOP)});
   textures.insert({"life", LoadTexture(IMG_LIFE)});
   textures.insert({"raspberry", LoadTexture(IMG_RASPBERRY)});
+  textures.insert({"carrot", LoadTexture(IMG_CARROT)});
+  textures.insert({"bubble", LoadTexture(IMG_BUBBLE)});
 
   sounds.insert({"plop", LoadSound("resources/audio/bogyo.mp3")});
   SetSoundVolume(sounds["plop"], 1.0f);
@@ -95,6 +102,7 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
 
   last_touch.reset();
   life.reset();
+  carrot.reset();
 
   reset();
 }
@@ -212,8 +220,9 @@ void App::handle_state() {
       }
     }
 
-    if (berry_burst > 0 && (has_chance(BERRY_BURST_CHANCE))) {
+    if (berry_burst > 0 && has_chance(BERRY_BURST_CHANCE)) {
       ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
+      new_berry.set_color(RED);
       berries.push_back(std::move(new_berry));
       berry_burst--;
     }
@@ -246,12 +255,15 @@ void App::handle_state() {
 
     for (auto& poop : poops) {
       if (CheckCollisionRecs(plane_rect, poop.rect())) {
-        score += SCORE_POOP;
         poop.consume();
-        plane.penalty_color.activate();
-        StopSound(sounds["ouch"]);
-        PlaySound(sounds["ouch"]);
-        life_count--;
+
+        if (!plane.shielded()) {
+            score += SCORE_POOP;
+            plane.penalty_color.activate();
+            StopSound(sounds["ouch"]);
+            PlaySound(sounds["ouch"]);
+            life_count--;
+        }
       }
     }
 
@@ -266,24 +278,43 @@ void App::handle_state() {
                        [](const auto& poop) { return poop.should_die(); }),
         poops.end());
 
-    if (score >= next_life_score) {
-      next_life_score += LIFE_SCORE_JUMP;
-      life = ConsumableItem(-LIFE_V, &textures["life"]);
-    }
-    if (life.has_value()) {
-      if (CheckCollisionRecs(plane_rect, life.value().rect())) {
-        life.value().consume();
-        life_count += 1;
-        StopSound(sounds["roar"]);
-        PlaySound(sounds["roar"]);
+    {  // Life.
+      if (score >= next_life_score) {
+        next_life_score += LIFE_SCORE_JUMP;
+        life = ConsumableItem(-LIFE_V, &textures["life"]);
       }
-      if (life.value().should_die()) {
-        life.reset();
+      if (life.has_value()) {
+        if (CheckCollisionRecs(plane_rect, life.value().rect())) {
+          life.value().consume();
+          life_count += 1;
+          StopSound(sounds["roar"]);
+          PlaySound(sounds["roar"]);
+        }
+        if (life.value().should_die()) {
+          life.reset();
+        }
       }
     }
 
     if (life_count < 0) {
       init_menu_state();
+    }
+
+    {  // Carrot.
+      if (!carrot.has_value()) {
+        if (has_chance(CARROT_CREATION_CHANCE)) {
+          carrot = ConsumableItem(-CARROT_V, &textures["carrot"]);
+        }
+      } else {
+        if (CheckCollisionRecs(plane_rect, carrot.value().rect())) {
+          plane.shield_enable();
+          carrot.value().consume();
+        }
+
+        if (carrot.value().should_die()) {
+          carrot.reset();
+        }
+      }
     }
 
     {  // Keep plane inside the screen.
@@ -320,8 +351,15 @@ void App::draw() {
       cloud.update();
     }
 
-    DrawTexture(*plane.texture, plane.entity.pos.x, plane.entity.pos.y,
-                plane.penalty_color.tint());
+    {  // Plane.
+      DrawTexture(*plane.texture, plane.entity.pos.x, plane.entity.pos.y,
+                  plane.penalty_color.tint());
+      if (plane.shielded()) {
+        DrawTexture(textures["bubble"], plane.entity.pos.x - 15,
+                    plane.entity.pos.y - 15, plane.shield_color());
+      }
+      plane.update();
+    }
 
     for (auto& berry : berries) {
       DrawTexture(*berry.texture, berry.entity.pos.x, berry.entity.pos.y,
@@ -337,6 +375,12 @@ void App::draw() {
       DrawTexture(*life.value().texture, life.value().entity.pos.x,
                   life.value().entity.pos.y, WHITE);
       life.value().update();
+    }
+
+    if (carrot.has_value()) {
+      DrawTexture(*carrot.value().texture, carrot.value().entity.pos.x,
+                  carrot.value().entity.pos.y, WHITE);
+      carrot.value().update();
     }
 
     DrawFPS(GetScreenWidth() - 128, 8);
@@ -379,6 +423,7 @@ void App::init_game_state() {
   state = STATE_GAME;
   next_life_score = LIFE_SCORE_JUMP;
   life.reset();
+  carrot.reset();
   berry_burst = 0;
 
   berries.clear();

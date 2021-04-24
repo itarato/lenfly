@@ -7,6 +7,9 @@
 #include "common.h"
 #include "raylib.h"
 
+#define SHIELD_LIFESPAN 400
+#define SHIELD_END_WARNING 150
+
 /// CLOUD /////////////////////////////////////////////////////////////////////
 
 Cloud::Cloud(float vx, Texture2D* texture) : texture(texture) {
@@ -34,6 +37,7 @@ void Plane::reset() {
   gravity.v = 0.0;
   penalty_color.reset();
   gravity_enabled = false;
+  shield = 0;
 }
 
 Plane::~Plane() {}
@@ -42,6 +46,24 @@ Rectangle Plane::rect() {
   return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
                    (float)texture->height};
 }
+
+void Plane::update() {
+  if (shield > 0) shield--;
+}
+
+Color Plane::shield_color() {
+  uint8_t alpha = 180;
+
+  if (shield < SHIELD_END_WARNING && (shield / 10) % 2 == 0) {
+    alpha = 100;
+  }
+
+  return Color{255, 255, 255, alpha};
+}
+
+bool Plane::shielded() { return shield > 0; }
+
+void Plane::shield_enable() { shield = SHIELD_LIFESPAN; }
 
 /// MOVABLE IMAGE /////////////////////////////////////////////////////////////
 
@@ -63,8 +85,11 @@ void Background::draw_and_move(int pos_y) {
 /// CONSUMABLE ITEM ///////////////////////////////////////////////////////////
 
 ConsumableItem::ConsumableItem(float vx, Texture2D* texture)
-    : color(WHITE), texture(texture), consumed(false), flags(0) {
+    : color(WHITE), texture(texture) {
   entity.vx = vx;
+
+  consumed = false;
+  flags = 0;
   entity.pos.x = GetScreenWidth();
   entity.pos.y = (rand() % GetScreenHeight()) - (texture->height / 2);
 }
