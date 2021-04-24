@@ -41,3 +41,5 @@ Color PenaltyColor::tint() {
 
   return Color{255, redness, redness, alpha};
 }
+
+void PenaltyColor::reset() { counter = 0; }

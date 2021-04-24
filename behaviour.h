@@ -24,4 +24,5 @@ struct PenaltyColor {
   PenaltyColor();
   void update();
   Color tint();
+  void reset();
 };

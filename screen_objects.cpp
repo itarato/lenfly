@@ -32,6 +32,7 @@ void Plane::reset() {
   entity.pos.x = 0.0;
   entity.pos.y = 0.0;
   gravity.v = 0.0;
+  penalty_color.reset();
 }
 
 Plane::~Plane() {}

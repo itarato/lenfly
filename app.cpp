@@ -177,13 +177,6 @@ void App::handle_state() {
               std::min(CTRL_MAX_SPEED,
                        (current_touch.y - last_touch.value().y) / 4.0f));
         }
-
-        plane.entity.pos.x = std::max(0, (int)plane.entity.pos.x);
-        plane.entity.pos.y = std::max(0, (int)plane.entity.pos.y);
-        plane.entity.pos.x = std::min(GetScreenWidth() - plane.texture->width,
-                                      (int)plane.entity.pos.x);
-        plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
-                                      (int)plane.entity.pos.y);
       }
     }
 
@@ -291,6 +284,15 @@ void App::handle_state() {
 
     if (life_count < 0) {
       init_menu_state();
+    }
+
+    {  // Keep plane inside the screen.
+      plane.entity.pos.x = std::max(0, (int)plane.entity.pos.x);
+      plane.entity.pos.y = std::max(0, (int)plane.entity.pos.y);
+      plane.entity.pos.x = std::min(GetScreenWidth() - plane.texture->width,
+                                    (int)plane.entity.pos.x);
+      plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
+                                    (int)plane.entity.pos.y);
     }
   }
 }
