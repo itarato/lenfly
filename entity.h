@@ -3,12 +3,12 @@
 #include <atomic>
 
 #include "common.h"
+#include "raylib.h"
 
 class Entity {
  public:
   Point pos;
-  // Horizontal velocity.
-  float vx;
+  Vector2 v;
 
   long long id;
 

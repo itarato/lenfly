@@ -43,9 +43,8 @@ struct Background {
  public:
   Entity entity;
   Texture2D* texture;
-  int vx;
 
-  Background(int vx);
+  Background(float vx);
   ~Background();
 
   void init(Texture2D* texture);
@@ -62,7 +61,7 @@ struct ConsumableItem {
   bool consumed;
   int flags;
 
-  ConsumableItem(float vx, Texture2D* texture);
+  ConsumableItem(Vector2 v, Texture2D* texture);
   ~ConsumableItem();
 
   void update();

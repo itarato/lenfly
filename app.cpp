@@ -182,7 +182,7 @@ void App::handle_state() {
         } else {
           berry_texture = &textures["berry"];
         }
-        ConsumableItem new_berry(-BERRY_V, berry_texture);
+        ConsumableItem new_berry({-BERRY_V, 0.0f}, berry_texture);
         if (berry_texture == &textures["raspberry"]) {
           new_berry.flags |= CONSUMABLE_ITEM_FLAG_BERRY_BONUS;
         }
@@ -194,7 +194,7 @@ void App::handle_state() {
     }
 
     if (berry_burst > 0 && has_chance(BERRY_BURST_CHANCE)) {
-      ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
+      ConsumableItem new_berry({-BERRY_V, 0.0f}, &textures["berry"]);
       new_berry.set_color(RED);
       berries.push_back(std::move(new_berry));
       berry_burst--;
@@ -202,7 +202,7 @@ void App::handle_state() {
 
     if ((int)poops.size() < max_poop()) {
       if (has_chance(POOP_CREATION_CHANCE)) {
-        ConsumableItem new_poop(-POOP_V, &textures["poop"]);
+        ConsumableItem new_poop({-POOP_V, 0.0f}, &textures["poop"]);
         poops.push_back(std::move(new_poop));
       }
     }
@@ -254,7 +254,7 @@ void App::handle_state() {
     {  // Life.
       if (score >= next_life_score) {
         next_life_score += LIFE_SCORE_JUMP;
-        life = ConsumableItem(-LIFE_V, &textures["life"]);
+        life = ConsumableItem({-LIFE_V, 0.0f}, &textures["life"]);
       }
       if (life.has_value()) {
         if (CheckCollisionRecs(plane_rect, life.value().rect())) {
@@ -276,7 +276,7 @@ void App::handle_state() {
     {  // Carrot.
       if (!carrot.has_value()) {
         if (has_chance(CARROT_CREATION_CHANCE)) {
-          carrot = ConsumableItem(-CARROT_V, &textures["carrot"]);
+          carrot = ConsumableItem({-CARROT_V, 0.0f}, &textures["carrot"]);
         }
       } else {
         if (CheckCollisionRecs(plane_rect, carrot.value().rect())) {
@@ -288,15 +288,6 @@ void App::handle_state() {
           carrot.reset();
         }
       }
-    }
-
-    {  // Keep plane inside the screen.
-      plane.entity.pos.x = std::max(0, (int)plane.entity.pos.x);
-      plane.entity.pos.y = std::max(0, (int)plane.entity.pos.y);
-      plane.entity.pos.x = std::min(GetScreenWidth() - plane.texture->width,
-                                    (int)plane.entity.pos.x);
-      plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
-                                    (int)plane.entity.pos.y);
     }
 
     {  // Boss fight.
@@ -343,6 +334,15 @@ void App::handle_state() {
                         (current_touch.y - last_touch.value().y) / 4.0f));
         }
       }
+    }
+
+    {  // Keep plane inside the screen.
+      plane.entity.pos.x = std::max(0, (int)plane.entity.pos.x);
+      plane.entity.pos.y = std::max(0, (int)plane.entity.pos.y);
+      plane.entity.pos.x = std::min(GetScreenWidth() - plane.texture->width,
+                                    (int)plane.entity.pos.x);
+      plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
+                                    (int)plane.entity.pos.y);
     }
   }
 }

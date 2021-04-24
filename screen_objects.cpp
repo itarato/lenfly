@@ -14,14 +14,14 @@
 
 Cloud::Cloud(float vx, Texture2D* texture) : texture(texture) {
   fade = (float)((rand() % 10) + 1) / 10.0f;
-  entity.vx = vx;
+  entity.v = Vector2{vx, 0.0f};
   entity.pos.x = GetScreenWidth();
   entity.pos.y = (rand() % GetScreenHeight()) - (texture->height / 2);
 }
 
 Cloud::~Cloud() {}
 
-void Cloud::update() { entity.pos.x += entity.vx; }
+void Cloud::update() { entity.pos.x += entity.v.x; }
 
 bool Cloud::should_die() { return entity.pos.x < -texture->width; }
 
@@ -69,7 +69,10 @@ void Plane::shield_enable() { shield = SHIELD_LIFESPAN; }
 
 void Background::init(Texture2D* _texture) { texture = _texture; }
 
-Background::Background(int vx) : vx(vx) { entity.pos.x = 0; }
+Background::Background(float vx) {
+  entity.pos.x = 0;
+  entity.v = Vector2{vx, 0.0f};
+}
 
 Background::~Background() {}
 
@@ -79,14 +82,14 @@ void Background::draw_and_move(int pos_y) {
   DrawTexture(*texture, entity.pos.x, pos_y, WHITE);
   DrawTexture(*texture, entity.pos.x + texture->width, pos_y, WHITE);
 
-  entity.pos.x -= vx;
+  entity.pos.x -= entity.v.x;
 }
 
 /// CONSUMABLE ITEM ///////////////////////////////////////////////////////////
 
-ConsumableItem::ConsumableItem(float vx, Texture2D* texture)
+ConsumableItem::ConsumableItem(Vector2 v, Texture2D* texture)
     : color(WHITE), texture(texture) {
-  entity.vx = vx;
+  entity.v = v;
 
   consumed = false;
   flags = 0;
@@ -96,7 +99,10 @@ ConsumableItem::ConsumableItem(float vx, Texture2D* texture)
 
 ConsumableItem::~ConsumableItem() {}
 
-void ConsumableItem::update() { entity.pos.x += entity.vx; }
+void ConsumableItem::update() {
+  entity.pos.x += entity.v.x;
+  entity.pos.y += entity.v.y;
+}
 
 bool ConsumableItem::should_die() const { return consumed || out_of_screen(); }
 
