@@ -32,8 +32,8 @@ Plane::Plane() { reset(); }
 void Plane::init(Texture2D* _texture) { texture = _texture; }
 
 void Plane::reset() {
-  entity.pos.x = 0.0;
-  entity.pos.y = 0.0;
+  entity.pos.x = GetScreenWidth() / 3;
+  entity.pos.y = GetScreenWidth() / 2 - texture->height;
   gravity.v = 0.0;
   penalty_color.reset();
   gravity_enabled = false;

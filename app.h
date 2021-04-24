@@ -13,6 +13,7 @@
 typedef enum {
   STATE_MENU = 0,
   STATE_GAME = 1,
+  STATE_BOSS = 2,
 } GameState;
 
 class App {
@@ -29,12 +30,14 @@ class App {
   int life_count;
   int next_life_score;
   int berry_burst;
+  int boss_fight_score;
 
   std::map<std::string, Texture2D> textures;
 
   std::vector<Cloud> clouds;
   std::vector<ConsumableItem> berries;
   std::vector<ConsumableItem> poops;
+  // std::vector<Cons
   std::optional<ConsumableItem> life;
   std::optional<ConsumableItem> carrot;
 
@@ -45,6 +48,7 @@ class App {
   int max_poop();
   void init_game_state();
   void init_menu_state();
+  void init_boss_state();
 
  public:
   App();

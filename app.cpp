@@ -39,6 +39,9 @@
 #define SCORE_BERRY_MISS 0
 #define SCORE_POOP -30
 
+#define BOSS_FIGHT_SCORE_INIT 10
+#define BOSS_FIGHT_SCORE_JUMP 1000
+
 #define CARROT_V 8
 #define CARROT_CREATION_CHANCE 1
 
@@ -150,43 +153,13 @@ void App::handle_state() {
         init_game_state();
       }
     }
-  } else {
+  }
+  
+  if (state == STATE_GAME) {
     UpdateMusicStream(background_music);
     UpdateMusicStream(engine_sound);
 
     if (IsKeyPressed(KEY_R)) reset();
-    if (IsKeyDown(KEY_UP)) plane.entity.pos.y -= PLANE_MOVE_V;
-    if (IsKeyDown(KEY_DOWN)) plane.entity.pos.y += PLANE_MOVE_V;
-    if (IsKeyDown(KEY_LEFT)) plane.entity.pos.x -= PLANE_MOVE_V;
-    if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
-    if (IsKeyPressed(KEY_G)) plane.gravity_enabled = !plane.gravity_enabled;
-    if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
-
-    if (plane.gravity_enabled) {
-      if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
-      plane.entity.pos.y += plane.gravity.update();
-    }
-
-    if (mouse_enabled) {
-      if (touch_count == 0) {
-        last_touch.reset();
-      } else {
-        Vector2 current_touch = GetTouchPosition(0);
-
-        if (!last_touch.has_value()) {
-          last_touch = current_touch;
-        } else {
-          plane.entity.pos.x += std::max(
-              -CTRL_MAX_SPEED,
-              std::min(CTRL_MAX_SPEED,
-                       (current_touch.x - last_touch.value().x) / 4.0f));
-          plane.entity.pos.y += std::max(
-              -CTRL_MAX_SPEED,
-              std::min(CTRL_MAX_SPEED,
-                       (current_touch.y - last_touch.value().y) / 4.0f));
-        }
-      }
-    }
 
     if (clouds.size() < MAX_CLOUDS) {
       if (has_chance(CLOUD_CREATION_CHANCE)) {
@@ -325,6 +298,52 @@ void App::handle_state() {
       plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
                                     (int)plane.entity.pos.y);
     }
+
+    {  // Boss fight.
+      if (score >= boss_fight_score) {
+        boss_fight_score += BOSS_FIGHT_SCORE_JUMP;
+        init_boss_state();
+      }
+    }
+  }
+  
+  if (state == STATE_BOSS) {
+
+  }
+
+  if (state == STATE_GAME || state == STATE_BOSS) {
+    if (IsKeyDown(KEY_UP)) plane.entity.pos.y -= PLANE_MOVE_V;
+    if (IsKeyDown(KEY_DOWN)) plane.entity.pos.y += PLANE_MOVE_V;
+    if (IsKeyDown(KEY_LEFT)) plane.entity.pos.x -= PLANE_MOVE_V;
+    if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
+    if (IsKeyPressed(KEY_G)) plane.gravity_enabled = !plane.gravity_enabled;
+    if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
+    
+    if (plane.gravity_enabled) {
+      if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
+      plane.entity.pos.y += plane.gravity.update();
+    }
+
+    if (mouse_enabled) {
+      if (touch_count == 0) {
+        last_touch.reset();
+      } else {
+        Vector2 current_touch = GetTouchPosition(0);
+
+        if (!last_touch.has_value()) {
+          last_touch = current_touch;
+        } else {
+          plane.entity.pos.x += std::max(
+              -CTRL_MAX_SPEED,
+              std::min(CTRL_MAX_SPEED,
+                        (current_touch.x - last_touch.value().x) / 4.0f));
+          plane.entity.pos.y += std::max(
+              -CTRL_MAX_SPEED,
+              std::min(CTRL_MAX_SPEED,
+                        (current_touch.y - last_touch.value().y) / 4.0f));
+        }
+      }
+    }
   }
 }
 
@@ -340,7 +359,9 @@ void App::draw() {
       DrawText(score_title, (GetScreenWidth() >> 1) - (score_title_width >> 1),
                (GetScreenHeight() >> 1) + 128, 64, DARKGRAY);
     }
-  } else if (state == STATE_GAME) {
+  }
+  
+  if (state == STATE_GAME || state == STATE_BOSS) {
     mountains.draw_and_move(GetScreenHeight() - (mountains.texture->height));
     vegetation.draw_and_move(GetScreenHeight() -
                              (vegetation.texture->height / 4 * 3));
@@ -360,7 +381,9 @@ void App::draw() {
       }
       plane.update();
     }
+  }
 
+  if (state == STATE_GAME) {
     for (auto& berry : berries) {
       DrawTexture(*berry.texture, berry.entity.pos.x, berry.entity.pos.y,
                   berry.get_color());
@@ -387,6 +410,10 @@ void App::draw() {
 
     DrawText(TextFormat("Score: %d | Life: %d", score, life_count), 8, 8, 64,
              DARKGRAY);
+  }
+  
+  if (state == STATE_BOSS) {
+    
   }
 }
 
@@ -428,6 +455,20 @@ void App::init_game_state() {
 
   berries.clear();
   poops.clear();
+
+  boss_fight_score = BOSS_FIGHT_SCORE_INIT;
 }
 
 void App::init_menu_state() { state = STATE_MENU; }
+
+void App::init_boss_state() {
+  state = STATE_BOSS;
+
+  berries.clear();
+  poops.clear();
+  clouds.clear();
+
+  life.reset();
+  carrot.reset();
+  plane.reset();
+}
