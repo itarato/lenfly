@@ -29,12 +29,14 @@ class App {
   std::optional<Vector2> last_touch;
   GameState state;
   int life_count;
+  int next_life_score;
 
   std::map<std::string, Texture2D> textures;
 
   std::vector<Cloud> clouds;
   std::vector<ConsumableItem> berries;
   std::vector<ConsumableItem> poops;
+  std::optional<ConsumableItem> life;
 
   std::map<std::string, Sound> sounds;
 

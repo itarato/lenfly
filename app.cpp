@@ -40,9 +40,13 @@
 #define IMG_CLOUD "resources/images/cloud.png"
 #define IMG_BERRY "resources/images/berry.png"
 #define IMG_POOP "resources/images/poop.png"
+#define IMG_LIFE "resources/images/life.png"
 
 #define CTRL_SIZE 0.06f
 #define CTRL_MAX_SPEED 13.0f
+
+#define LIFE_SCORE_JUMP 300;
+#define LIFE_V 12
 
 App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   SetConfigFlags(FLAG_VSYNC_HINT);
@@ -66,11 +70,14 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   textures.insert({"cloud", LoadTexture(IMG_CLOUD)});
   textures.insert({"berry", LoadTexture(IMG_BERRY)});
   textures.insert({"poop", LoadTexture(IMG_POOP)});
+  textures.insert({"life", LoadTexture(IMG_LIFE)});
 
   sounds.insert({"plop", LoadSound("resources/audio/bogyo.mp3")});
   SetSoundVolume(sounds["plop"], 1.0f);
   sounds.insert({"ouch", LoadSound("resources/audio/oh.mp3")});
   SetSoundVolume(sounds["ouch"], 0.8f);
+  sounds.insert({"roar", LoadSound("resources/audio/roar.mp3")});
+  SetSoundVolume(sounds["roar"], 0.8f);
 
   srand(time(NULL));
 
@@ -80,6 +87,7 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   mountains.init(&textures["mountains"]);
 
   last_touch.reset();
+  life.reset();
 
   reset();
 }
@@ -192,7 +200,7 @@ void App::handle_state() {
       }
     }
 
-    if (poops.size() < max_poop()) {
+    if ((int)poops.size() < max_poop()) {
       if (rand() % 100 < POOP_CREATION_CHANCE) {
         ConsumableItem new_poop(-POOP_V, &textures["poop"]);
         poops.push_back(std::move(new_poop));
@@ -246,6 +254,25 @@ void App::handle_state() {
                        [](const auto& poop) { return poop.should_die(); }),
         poops.end());
 
+    if (score >= next_life_score) {
+      next_life_score += LIFE_SCORE_JUMP;
+      life = ConsumableItem(-LIFE_V, &textures["life"]);
+    }
+    if (life.has_value()) {
+      Rectangle life_rect{life.value().entity.pos.x, life.value().entity.pos.y,
+                          (float)life.value().texture->width,
+                          (float)life.value().texture->height};
+      if (CheckCollisionRecs(plane_rect, life_rect)) {
+        life.value().consume();
+        life_count += 1;
+        StopSound(sounds["roar"]);
+        PlaySound(sounds["roar"]);
+      }
+      if (life.value().should_die()) {
+        life.reset();
+      }
+    }
+
     if (life_count < 0) {
       init_menu_state();
     }
@@ -288,6 +315,12 @@ void App::draw() {
       poop.update();
     }
 
+    if (life.has_value()) {
+      DrawTexture(*life.value().texture, life.value().entity.pos.x,
+                  life.value().entity.pos.y, WHITE);
+      life.value().update();
+    }
+
     DrawFPS(GetScreenWidth() - 128, 8);
 
     DrawText(TextFormat("Score: %d | Life: %d", score, life_count), 8, 8, 64,
@@ -327,6 +360,8 @@ void App::init_game_state() {
   score = 0;
 
   state = STATE_GAME;
+  next_life_score = LIFE_SCORE_JUMP;
+  life.reset();
 }
 
 void App::init_menu_state() { state = STATE_MENU; }

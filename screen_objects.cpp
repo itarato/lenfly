@@ -53,7 +53,7 @@ void Background::draw_and_move(int pos_y) {
   entity.pos.x -= vx;
 }
 
-/// BERRY /////////////////////////////////////////////////////////////////////
+/// CONSUMABLE ITEM ///////////////////////////////////////////////////////////
 
 ConsumableItem::ConsumableItem(float vx, Texture2D* texture)
     : texture(texture), consumed(false) {
