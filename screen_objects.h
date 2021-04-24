@@ -29,6 +29,7 @@ struct Plane {
   ~Plane();
   void reset();
   void init(Texture2D* texture);
+  Rectangle rect();
 };
 
 struct Background {
@@ -63,4 +64,5 @@ struct ConsumableItem {
   void consume();
   Color get_color();
   void set_color(Color);
+  Rectangle rect();
 };

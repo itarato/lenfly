@@ -232,16 +232,10 @@ void App::handle_state() {
       }
     }
 
-    Rectangle plane_rect{plane.entity.pos.x, plane.entity.pos.y,
-                         (float)plane.texture->width,
-                         (float)plane.texture->height};
+    Rectangle plane_rect = plane.rect();
 
     for (auto& berry : berries) {
-      Rectangle berry_rect{berry.entity.pos.x, berry.entity.pos.y,
-                           (float)berry.texture->width,
-                           (float)berry.texture->height};
-
-      if (CheckCollisionRecs(plane_rect, berry_rect)) {
+      if (CheckCollisionRecs(plane_rect, berry.rect())) {
         score += SCORE_BERRY;
         berry.consume();
         StopSound(sounds["plop"]);
@@ -258,11 +252,7 @@ void App::handle_state() {
     }
 
     for (auto& poop : poops) {
-      Rectangle poop_rect{poop.entity.pos.x, poop.entity.pos.y,
-                          (float)poop.texture->width,
-                          (float)poop.texture->height};
-
-      if (CheckCollisionRecs(plane_rect, poop_rect)) {
+      if (CheckCollisionRecs(plane_rect, poop.rect())) {
         score += SCORE_POOP;
         poop.consume();
         plane.penalty_color.activate();
@@ -288,10 +278,7 @@ void App::handle_state() {
       life = ConsumableItem(-LIFE_V, &textures["life"]);
     }
     if (life.has_value()) {
-      Rectangle life_rect{life.value().entity.pos.x, life.value().entity.pos.y,
-                          (float)life.value().texture->width,
-                          (float)life.value().texture->height};
-      if (CheckCollisionRecs(plane_rect, life_rect)) {
+      if (CheckCollisionRecs(plane_rect, life.value().rect())) {
         life.value().consume();
         life_count += 1;
         StopSound(sounds["roar"]);
@@ -392,6 +379,9 @@ void App::init_game_state() {
   next_life_score = LIFE_SCORE_JUMP;
   life.reset();
   berry_burst = 0;
+
+  berries.clear();
+  poops.clear();
 }
 
 void App::init_menu_state() { state = STATE_MENU; }

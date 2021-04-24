@@ -36,6 +36,11 @@ void Plane::reset() {
 
 Plane::~Plane() {}
 
+Rectangle Plane::rect() {
+  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
+                   (float)texture->height};
+}
+
 /// MOVABLE IMAGE /////////////////////////////////////////////////////////////
 
 void Background::init(Texture2D* _texture) { texture = _texture; }
@@ -77,3 +82,8 @@ void ConsumableItem::consume() { consumed = true; }
 Color ConsumableItem::get_color() { return color; }
 
 void ConsumableItem::set_color(Color new_color) { color = new_color; }
+
+Rectangle ConsumableItem::rect() {
+  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
+                   (float)texture->height};
+}
