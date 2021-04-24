@@ -25,6 +25,11 @@
 #define BERRY_V 10.0f
 // Chance in percentage [0..100).
 #define BERRY_CREATION_CHANCE 3
+#define BERRY_BONUS_CHANCE 0
+#define BERRY_BURST 42
+#define BERRY_BURST_CHANCE 30
+
+#define CONSUMABLE_ITEM_FLAG_BERRY_BONUS 1
 
 #define MAX_POOPS 2
 #define POOP_V 6.0f
@@ -41,6 +46,7 @@
 #define IMG_BERRY "resources/images/berry.png"
 #define IMG_POOP "resources/images/poop.png"
 #define IMG_LIFE "resources/images/life.png"
+#define IMG_RASPBERRY "resources/images/raspberry.png"
 
 #define CTRL_SIZE 0.06f
 #define CTRL_MAX_SPEED 13.0f
@@ -71,6 +77,7 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   textures.insert({"berry", LoadTexture(IMG_BERRY)});
   textures.insert({"poop", LoadTexture(IMG_POOP)});
   textures.insert({"life", LoadTexture(IMG_LIFE)});
+  textures.insert({"raspberry", LoadTexture(IMG_RASPBERRY)});
 
   sounds.insert({"plop", LoadSound("resources/audio/bogyo.mp3")});
   SetSoundVolume(sounds["plop"], 1.0f);
@@ -195,9 +202,27 @@ void App::handle_state() {
 
     if (berries.size() < MAX_BERRY) {
       if (rand() % 100 < BERRY_CREATION_CHANCE) {
-        ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
+        Texture2D* berry_texture = nullptr;
+        if (rand() % 100 <= BERRY_BONUS_CHANCE) {
+          berry_texture = &textures["raspberry"];
+        } else {
+          berry_texture = &textures["berry"];
+        }
+        ConsumableItem new_berry(-BERRY_V, berry_texture);
+        if (berry_texture == &textures["raspberry"]) {
+          new_berry.flags |= CONSUMABLE_ITEM_FLAG_BERRY_BONUS;
+        }
+        new_berry.set_color({(uint8_t)(255 - GetRandomValue(0, 100)),
+                             (uint8_t)(255 - GetRandomValue(0, 100)),
+                             (uint8_t)(255 - GetRandomValue(0, 100)), 255});
         berries.push_back(std::move(new_berry));
       }
+    }
+
+    if (berry_burst > 0 && (rand() % 100 < BERRY_BURST_CHANCE)) {
+      ConsumableItem new_berry(-BERRY_V, &textures["berry"]);
+      berries.push_back(std::move(new_berry));
+      berry_burst--;
     }
 
     if ((int)poops.size() < max_poop()) {
@@ -221,6 +246,10 @@ void App::handle_state() {
         berry.consume();
         StopSound(sounds["plop"]);
         PlaySound(sounds["plop"]);
+
+        if (berry.flags & CONSUMABLE_ITEM_FLAG_BERRY_BONUS) {
+          berry_burst += BERRY_BURST;
+        }
       }
 
       if (berry.out_of_screen()) {
@@ -307,7 +336,7 @@ void App::draw() {
 
     for (auto& berry : berries) {
       DrawTexture(*berry.texture, berry.entity.pos.x, berry.entity.pos.y,
-                  WHITE);
+                  berry.get_color());
       berry.update();
     }
     for (auto& poop : poops) {
@@ -362,6 +391,7 @@ void App::init_game_state() {
   state = STATE_GAME;
   next_life_score = LIFE_SCORE_JUMP;
   life.reset();
+  berry_burst = 0;
 }
 
 void App::init_menu_state() { state = STATE_MENU; }

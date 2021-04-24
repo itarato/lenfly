@@ -45,10 +45,14 @@ struct Background {
 };
 
 struct ConsumableItem {
+ private:
+  Color color;
+
  public:
   Entity entity;
   Texture2D* texture;
   bool consumed;
+  int flags;
 
   ConsumableItem(float vx, Texture2D* texture);
   ~ConsumableItem();
@@ -57,4 +61,6 @@ struct ConsumableItem {
   bool should_die() const;
   bool out_of_screen() const;
   void consume();
+  Color get_color();
+  void set_color(Color);
 };

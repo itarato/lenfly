@@ -30,6 +30,7 @@ class App {
   GameState state;
   int life_count;
   int next_life_score;
+  int berry_burst;
 
   std::map<std::string, Texture2D> textures;
 

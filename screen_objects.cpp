@@ -56,7 +56,7 @@ void Background::draw_and_move(int pos_y) {
 /// CONSUMABLE ITEM ///////////////////////////////////////////////////////////
 
 ConsumableItem::ConsumableItem(float vx, Texture2D* texture)
-    : texture(texture), consumed(false) {
+    : texture(texture), consumed(false), color(WHITE), flags(0) {
   entity.vx = vx;
   entity.pos.x = GetScreenWidth();
   entity.pos.y = (rand() % GetScreenHeight()) - (texture->height / 2);
@@ -73,3 +73,7 @@ bool ConsumableItem::out_of_screen() const {
 }
 
 void ConsumableItem::consume() { consumed = true; }
+
+Color ConsumableItem::get_color() { return color; }
+
+void ConsumableItem::set_color(Color new_color) { color = new_color; }
