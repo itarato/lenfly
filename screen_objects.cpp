@@ -12,6 +12,7 @@
 #define SHIELD_END_WARNING 150
 
 #define BOSS_LIFE 20
+#define BOSS_V 8
 
 /// CLOUD /////////////////////////////////////////////////////////////////////
 
@@ -30,9 +31,12 @@ bool Cloud::should_die() { return entity.pos.x < -texture->width; }
 
 /// PLANE /////////////////////////////////////////////////////////////////////
 
-Plane::Plane() { reset(); }
+Plane::Plane() : texture(nullptr) {}
 
-void Plane::init(Texture2D* _texture) { texture = _texture; }
+void Plane::init(Texture2D* _texture) {
+  texture = _texture;
+  reset();
+}
 
 void Plane::reset() {
   entity.pos.x = GetScreenWidth() / 3;
@@ -70,23 +74,42 @@ void Plane::shield_enable() { shield = SHIELD_LIFESPAN; }
 
 /// BOSS //////////////////////////////////////////////////////////////////////
 
-Boss::Boss() { reset(); }
+Boss::Boss() : texture(nullptr) {}
 
-void Boss::init(Texture2D* new_texture) { texture = new_texture; }
+void Boss::init(Texture2D* new_texture) {
+  texture = new_texture;
+  reset();
+}
 
 Boss::~Boss() {}
 
 void Boss::update() {
-  entity.pos.x += (rand() % 17) - 8;
-  entity.pos.x = std::min(GetScreenWidth() - texture->width, (int)entity.pos.x);
-  entity.pos.x = std::max(0, (int)entity.pos.x);
+  if (abs(entity.pos.x - next_location) < BOSS_V) {
+    next_location = GetRandomValue(0, GetScreenWidth() - texture->width);
+  } else {
+    entity.pos.x += (BOSS_V * ((entity.pos.x - next_location <= 0) ? 1 : -1));
+  }
 }
 
 void Boss::reset() {
   life = BOSS_LIFE;
   entity.pos.x = GetScreenWidth() / 2;
   entity.pos.y = GetScreenHeight() - (texture->height / 5 * 4);
+  next_location = (int)entity.pos.x;
 }
+
+Rectangle Boss::rect() {
+  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
+                   (float)texture->height};
+}
+
+void Boss::feed() {
+  if (life > 0) life--;
+}
+
+bool Boss::is_full() { return life <= 0; }
+
+float Boss::health() { return (float)life / BOSS_LIFE; }
 
 /// MOVABLE IMAGE /////////////////////////////////////////////////////////////
 

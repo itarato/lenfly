@@ -39,8 +39,8 @@
 #define SCORE_BERRY_MISS 0
 #define SCORE_POOP -30
 
-#define BOSS_FIGHT_SCORE_INIT 0
-#define BOSS_FIGHT_SCORE_JUMP 1000
+#define BOSS_FIGHT_SCORE_INIT 500
+#define BOSS_FIGHT_SCORE_JUMP 500
 #define BOSS_TREAT_V 20
 
 #define CARROT_V 8
@@ -308,7 +308,7 @@ void App::handle_state() {
   
   if (state == STATE_BOSS) {
     int gesture = GetGestureDetected();
-    if (gesture == GESTURE_TAP) {
+    if (gesture == GESTURE_TAP || IsKeyPressed(KEY_SPACE)) {
       ConsumableItem boss_treat{{0.0f, BOSS_TREAT_V}, &textures["chicken"]};
       boss_treat.entity.pos.x = plane.entity.pos.x + plane.texture->width / 2;
       boss_treat.entity.pos.y = plane.entity.pos.y + plane.texture->height - 30;
@@ -320,6 +320,17 @@ void App::handle_state() {
                                        return boss_treat.should_die();
                                      }),
                       boss_treats.end());
+
+    for (auto& boss_treat : boss_treats) {
+      if (CheckCollisionRecs(boss_treat.rect(), boss.rect())) {
+        boss_treat.consume();
+        boss.feed();
+      }
+    }
+
+    if (boss.is_full()) {
+      return_game_state();
+    }
   }
 
   if (state == STATE_GAME || state == STATE_BOSS) {
@@ -364,6 +375,10 @@ void App::handle_state() {
       plane.entity.pos.y = std::min(GetScreenHeight() - plane.texture->height,
                                     (int)plane.entity.pos.y);
     }
+  }
+
+  if (state == STATE_BOSS) {
+    plane.entity.pos.y = 128;
   }
 }
 
@@ -416,6 +431,12 @@ void App::draw() {
     }
   }
 
+  if (state == STATE_BOSS) {
+    DrawRectangleLinesEx({32.0f, 32.0f, GetScreenWidth() - 64.0f, 48.0f}, 4,
+                         DARKGRAY);
+    DrawRectangle(40, 40, (GetScreenWidth() - 80) * boss.health(), 32, RED);
+  }
+
   if (state == STATE_GAME) {
     for (auto& berry : berries) {
       DrawTexture(*berry.texture, berry.entity.pos.x, berry.entity.pos.y,
@@ -465,27 +486,29 @@ App::~App() {
 int App::max_poop() { return score / 100 + MAX_POOPS; }
 
 void App::init_game_state() {
-  plane.reset();
+  return_game_state();
+  score = 0;
+  life_count = 3;
+  next_life_score = LIFE_SCORE_JUMP;
+  boss_fight_score = BOSS_FIGHT_SCORE_INIT;
 
 #if defined(PLATFORM_ANDROID)
   mouse_enabled = true;
 #else
   mouse_enabled = false;
 #endif
+}
 
-  life_count = 3;
-  score = 0;
+void App::return_game_state() {
+  plane.reset();
 
   state = STATE_GAME;
-  next_life_score = LIFE_SCORE_JUMP;
   life.reset();
   carrot.reset();
   berry_burst = 0;
 
   berries.clear();
   poops.clear();
-
-  boss_fight_score = BOSS_FIGHT_SCORE_INIT;
 }
 
 void App::init_menu_state() { state = STATE_MENU; }

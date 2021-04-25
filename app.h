@@ -50,6 +50,7 @@ class App {
   void init_game_state();
   void init_menu_state();
   void init_boss_state();
+  void return_game_state();
 
  public:
   App();

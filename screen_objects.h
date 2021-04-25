@@ -40,6 +40,9 @@ struct Plane {
 };
 
 struct Boss {
+ private:
+  int next_location;
+
  public:
   Entity entity;
   Texture2D* texture;
@@ -49,6 +52,10 @@ struct Boss {
   void update();
   int life;
   void reset();
+  Rectangle rect();
+  float health();
+  void feed();
+  bool is_full();
 };
 
 struct Background {
