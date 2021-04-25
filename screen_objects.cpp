@@ -16,6 +16,11 @@
 
 BaseScreenObject::BaseScreenObject() { texture = nullptr; }
 
+bool BaseScreenObject::out_of_screen() const {
+  return entity.pos.x <= -texture->width || entity.pos.y >= GetScreenHeight() ||
+         entity.pos.x > GetScreenWidth() || entity.pos.y <= -texture->height;
+}
+
 /// CLOUD /////////////////////////////////////////////////////////////////////
 
 Cloud::Cloud(float vx, Texture2D* _texture) {
@@ -30,7 +35,7 @@ Cloud::~Cloud() {}
 
 void Cloud::update() { entity.pos.x += entity.v.x; }
 
-bool Cloud::should_die() { return entity.pos.x < -texture->width; }
+bool Cloud::should_die() { return out_of_screen(); }
 
 /// PLANE /////////////////////////////////////////////////////////////////////
 
@@ -154,10 +159,6 @@ void ConsumableItem::update() {
 }
 
 bool ConsumableItem::should_die() const { return consumed || out_of_screen(); }
-
-bool ConsumableItem::out_of_screen() const {
-  return entity.pos.x <= -texture->width || entity.pos.y >= GetScreenHeight();
-}
 
 void ConsumableItem::consume() { consumed = true; }
 

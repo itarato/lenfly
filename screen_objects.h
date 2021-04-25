@@ -9,6 +9,8 @@ struct BaseScreenObject {
   Texture2D* texture;
 
   BaseScreenObject();
+
+  bool out_of_screen() const;
 };
 
 struct Cloud : public BaseScreenObject {
@@ -81,7 +83,6 @@ struct ConsumableItem : public BaseScreenObject {
 
   void update();
   bool should_die() const;
-  bool out_of_screen() const;
   void consume();
   Color get_color();
   void set_color(Color);
