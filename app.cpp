@@ -39,8 +39,8 @@
 #define SCORE_BERRY_MISS 0
 #define SCORE_POOP -30
 
-#define BOSS_FIGHT_SCORE_INIT 500
-#define BOSS_FIGHT_SCORE_JUMP 500
+#define BOSS_FIGHT_SCORE_INIT 10
+#define BOSS_FIGHT_SCORE_JUMP 20
 #define BOSS_TREAT_V 20
 
 #define CARROT_V 8
@@ -435,6 +435,7 @@ void App::draw() {
     DrawRectangleLinesEx({32.0f, 32.0f, GetScreenWidth() - 64.0f, 48.0f}, 4,
                          DARKGRAY);
     DrawRectangle(40, 40, (GetScreenWidth() - 80) * boss.health(), 32, RED);
+    DrawText("BOSS", 32, 84, 64, DARKGRAY);
   }
 
   if (state == STATE_GAME) {
