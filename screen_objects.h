@@ -11,6 +11,7 @@ struct BaseScreenObject {
   BaseScreenObject();
 
   bool out_of_screen() const;
+  Rectangle rect();
 };
 
 struct Cloud : public BaseScreenObject {
@@ -18,10 +19,9 @@ struct Cloud : public BaseScreenObject {
   float fade;
 
   Cloud(float vx, Texture2D* texture);
-  ~Cloud();
 
   void update();
-  bool should_die();
+  bool should_die() const;
 };
 
 struct Plane : public BaseScreenObject {
@@ -34,10 +34,9 @@ struct Plane : public BaseScreenObject {
   bool gravity_enabled;
 
   Plane();
-  ~Plane();
+
   void reset();
   void init(Texture2D* texture);
-  Rectangle rect();
   bool shielded();
   void update();
   Color shield_color();
@@ -50,12 +49,11 @@ struct Boss : public BaseScreenObject {
 
  public:
   Boss();
-  ~Boss();
+
   void init(Texture2D*);
   void update();
   int life;
   void reset();
-  Rectangle rect();
   float health();
   void feed();
   bool is_full();
@@ -64,7 +62,6 @@ struct Boss : public BaseScreenObject {
 struct Background : public BaseScreenObject {
  public:
   Background(float vx);
-  ~Background();
 
   void init(Texture2D* texture);
   void draw_and_move(int pos_y);
@@ -79,12 +76,10 @@ struct ConsumableItem : public BaseScreenObject {
   int flags;
 
   ConsumableItem(Vector2 v, Texture2D* texture);
-  ~ConsumableItem();
 
   void update();
   bool should_die() const;
   void consume();
   Color get_color();
   void set_color(Color);
-  Rectangle rect();
 };

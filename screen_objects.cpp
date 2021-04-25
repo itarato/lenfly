@@ -21,6 +21,11 @@ bool BaseScreenObject::out_of_screen() const {
          entity.pos.x > GetScreenWidth() || entity.pos.y <= -texture->height;
 }
 
+Rectangle BaseScreenObject::rect() {
+  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
+                   (float)texture->height};
+}
+
 /// CLOUD /////////////////////////////////////////////////////////////////////
 
 Cloud::Cloud(float vx, Texture2D* _texture) {
@@ -31,11 +36,9 @@ Cloud::Cloud(float vx, Texture2D* _texture) {
   entity.pos.y = (rand() % GetScreenHeight()) - (texture->height / 2);
 }
 
-Cloud::~Cloud() {}
-
 void Cloud::update() { entity.pos.x += entity.v.x; }
 
-bool Cloud::should_die() { return out_of_screen(); }
+bool Cloud::should_die() const { return out_of_screen(); }
 
 /// PLANE /////////////////////////////////////////////////////////////////////
 
@@ -53,13 +56,6 @@ void Plane::reset() {
   penalty_color.reset();
   gravity_enabled = false;
   shield = 0;
-}
-
-Plane::~Plane() {}
-
-Rectangle Plane::rect() {
-  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
-                   (float)texture->height};
 }
 
 void Plane::update() {
@@ -89,8 +85,6 @@ void Boss::init(Texture2D* _texture) {
   reset();
 }
 
-Boss::~Boss() {}
-
 void Boss::update() {
   if (abs(entity.pos.x - next_location) < BOSS_V) {
     next_location = GetRandomValue(0, GetScreenWidth() - texture->width);
@@ -104,11 +98,6 @@ void Boss::reset() {
   entity.pos.x = GetScreenWidth() / 2;
   entity.pos.y = GetScreenHeight() - (texture->height / 5 * 4);
   next_location = (int)entity.pos.x;
-}
-
-Rectangle Boss::rect() {
-  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
-                   (float)texture->height};
 }
 
 void Boss::feed() {
@@ -127,8 +116,6 @@ Background::Background(float vx) {
   entity.pos.x = 0;
   entity.v = Vector2{vx, 0.0f};
 }
-
-Background::~Background() {}
 
 void Background::draw_and_move(int pos_y) {
   if (entity.pos.x <= -texture->width) entity.pos.x = 0;
@@ -151,8 +138,6 @@ ConsumableItem::ConsumableItem(Vector2 v, Texture2D* _texture) : color(WHITE) {
   entity.pos.y = (rand() % GetScreenHeight()) - (texture->height / 2);
 }
 
-ConsumableItem::~ConsumableItem() {}
-
 void ConsumableItem::update() {
   entity.pos.x += entity.v.x;
   entity.pos.y += entity.v.y;
@@ -165,8 +150,3 @@ void ConsumableItem::consume() { consumed = true; }
 Color ConsumableItem::get_color() { return color; }
 
 void ConsumableItem::set_color(Color new_color) { color = new_color; }
-
-Rectangle ConsumableItem::rect() {
-  return Rectangle{entity.pos.x, entity.pos.y, (float)texture->width,
-                   (float)texture->height};
-}

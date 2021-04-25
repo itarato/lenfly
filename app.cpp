@@ -128,11 +128,9 @@ void App::run() {
 
     BeginDrawing();
 
-    {
-      ClearBackground(RAYWHITE);
+    ClearBackground(RAYWHITE);
 
-      draw();
-    }
+    draw();
 
     EndDrawing();
   }
