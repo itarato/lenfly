@@ -523,4 +523,6 @@ void App::init_boss_state() {
   life.reset();
   carrot.reset();
   plane.reset();
+
+  boss.reset();
 }
