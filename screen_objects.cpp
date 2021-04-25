@@ -14,9 +14,12 @@
 #define BOSS_LIFE 20
 #define BOSS_V 8
 
+BaseScreenObject::BaseScreenObject() { texture = nullptr; }
+
 /// CLOUD /////////////////////////////////////////////////////////////////////
 
-Cloud::Cloud(float vx, Texture2D* texture) : texture(texture) {
+Cloud::Cloud(float vx, Texture2D* _texture) {
+  texture = _texture;
   fade = (float)((rand() % 10) + 1) / 10.0f;
   entity.v = Vector2{vx, 0.0f};
   entity.pos.x = GetScreenWidth();
@@ -31,7 +34,7 @@ bool Cloud::should_die() { return entity.pos.x < -texture->width; }
 
 /// PLANE /////////////////////////////////////////////////////////////////////
 
-Plane::Plane() : texture(nullptr) {}
+Plane::Plane() {}
 
 void Plane::init(Texture2D* _texture) {
   texture = _texture;
@@ -74,10 +77,10 @@ void Plane::shield_enable() { shield = SHIELD_LIFESPAN; }
 
 /// BOSS //////////////////////////////////////////////////////////////////////
 
-Boss::Boss() : texture(nullptr) {}
+Boss::Boss() {}
 
-void Boss::init(Texture2D* new_texture) {
-  texture = new_texture;
+void Boss::init(Texture2D* _texture) {
+  texture = _texture;
   reset();
 }
 
@@ -133,8 +136,8 @@ void Background::draw_and_move(int pos_y) {
 
 /// CONSUMABLE ITEM ///////////////////////////////////////////////////////////
 
-ConsumableItem::ConsumableItem(Vector2 v, Texture2D* texture)
-    : color(WHITE), texture(texture) {
+ConsumableItem::ConsumableItem(Vector2 v, Texture2D* _texture) : color(WHITE) {
+  texture = _texture;
   entity.v = v;
 
   consumed = false;

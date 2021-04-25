@@ -7,7 +7,7 @@
 
 class Entity {
  public:
-  Point pos;
+  Vector2 pos;
   Vector2 v;
 
   long long id;

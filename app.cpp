@@ -104,16 +104,13 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   srand(time(NULL));
 
   plane.init(&textures["plane"]);
-
   vegetation.init(&textures["vegetation"]);
   mountains.init(&textures["mountains"]);
+  boss.init(&textures["boss"]);
 
   last_touch.reset();
   life.reset();
   carrot.reset();
-
-  boss.init(&textures["boss"]);
-  boss.reset();
 
   reset();
 }

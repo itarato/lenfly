@@ -4,10 +4,15 @@
 #include "entity.h"
 #include "raylib.h"
 
-struct Cloud {
- public:
+struct BaseScreenObject {
   Entity entity;
   Texture2D* texture;
+
+  BaseScreenObject();
+};
+
+struct Cloud : public BaseScreenObject {
+ public:
   float fade;
 
   Cloud(float vx, Texture2D* texture);
@@ -17,13 +22,11 @@ struct Cloud {
   bool should_die();
 };
 
-struct Plane {
+struct Plane : public BaseScreenObject {
  private:
   int shield;
 
  public:
-  Texture2D* texture;
-  Entity entity;
   Gravity gravity;
   PenaltyColor penalty_color;
   bool gravity_enabled;
@@ -39,13 +42,11 @@ struct Plane {
   void shield_enable();
 };
 
-struct Boss {
+struct Boss : public BaseScreenObject {
  private:
   int next_location;
 
  public:
-  Entity entity;
-  Texture2D* texture;
   Boss();
   ~Boss();
   void init(Texture2D*);
@@ -58,11 +59,8 @@ struct Boss {
   bool is_full();
 };
 
-struct Background {
+struct Background : public BaseScreenObject {
  public:
-  Entity entity;
-  Texture2D* texture;
-
   Background(float vx);
   ~Background();
 
@@ -70,13 +68,11 @@ struct Background {
   void draw_and_move(int pos_y);
 };
 
-struct ConsumableItem {
+struct ConsumableItem : public BaseScreenObject {
  private:
   Color color;
 
  public:
-  Entity entity;
-  Texture2D* texture;
   bool consumed;
   int flags;
 
