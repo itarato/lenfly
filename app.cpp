@@ -65,6 +65,18 @@
 #define LIFE_SCORE_JUMP 300;
 #define LIFE_V 12
 
+void cleanup_dead_consumable_items(std::vector<Cloud>& list) {
+  list.erase(std::remove_if(list.begin(), list.end(),
+                            [](const auto& e) { return e.should_die(); }),
+             list.end());
+}
+
+void cleanup_dead_consumable_items(std::vector<ConsumableItem>& list) {
+  list.erase(std::remove_if(list.begin(), list.end(),
+                            [](const auto& e) { return e.should_die(); }),
+             list.end());
+}
+
 App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   SetConfigFlags(FLAG_VSYNC_HINT);
   InitWindow(SCREEN_W, SCREEN_H, "SECRET");
@@ -173,9 +185,7 @@ void App::handle_state() {
       }
     }
 
-    clouds.erase(std::remove_if(clouds.begin(), clouds.end(),
-                                [](auto cloud) { return cloud.should_die(); }),
-                 clouds.end());
+    cleanup_dead_consumable_items(clouds);
 
     if (berries.size() < MAX_BERRY) {
       if (has_chance(BERRY_CREATION_CHANCE)) {
@@ -189,9 +199,6 @@ void App::handle_state() {
         if (berry_texture == &textures["raspberry"]) {
           new_berry.flags |= CONSUMABLE_ITEM_FLAG_BERRY_BONUS;
         }
-        new_berry.set_color({(uint8_t)(255 - GetRandomValue(0, 100)),
-                             (uint8_t)(255 - GetRandomValue(0, 100)),
-                             (uint8_t)(255 - GetRandomValue(0, 100)), 255});
         berries.push_back(std::move(new_berry));
       }
     }
@@ -245,14 +252,8 @@ void App::handle_state() {
 
     plane.penalty_color.update();
 
-    berries.erase(
-        std::remove_if(berries.begin(), berries.end(),
-                       [](const auto& berry) { return berry.should_die(); }),
-        berries.end());
-    poops.erase(
-        std::remove_if(poops.begin(), poops.end(),
-                       [](const auto& poop) { return poop.should_die(); }),
-        poops.end());
+    cleanup_dead_consumable_items(berries);
+    cleanup_dead_consumable_items(poops);
 
     {  // Life.
       if (score >= next_life_score) {

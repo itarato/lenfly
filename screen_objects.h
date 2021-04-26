@@ -4,6 +4,10 @@
 #include "entity.h"
 #include "raylib.h"
 
+struct IShouldDie {
+  virtual bool should_die() const = 0;
+};
+
 struct BaseScreenObject {
   Entity entity;
   Texture2D* texture;
@@ -14,7 +18,7 @@ struct BaseScreenObject {
   Rectangle rect();
 };
 
-struct Cloud : public BaseScreenObject {
+struct Cloud : public BaseScreenObject, public IShouldDie {
  public:
   float fade;
 
