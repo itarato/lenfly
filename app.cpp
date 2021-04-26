@@ -199,6 +199,7 @@ void App::handle_state() {
         if (berry_texture == &textures["raspberry"]) {
           new_berry.flags |= CONSUMABLE_ITEM_FLAG_BERRY_BONUS;
         }
+        new_berry.wiggle.init(1.0f, 120);
         berries.push_back(std::move(new_berry));
       }
     }
@@ -213,6 +214,7 @@ void App::handle_state() {
     if ((int)poops.size() < max_poop()) {
       if (has_chance(POOP_CREATION_CHANCE)) {
         ConsumableItem new_poop({-POOP_V, 0.0f}, &textures["poop"]);
+        new_poop.wiggle.init(4.0f, 160);
         poops.push_back(std::move(new_poop));
       }
     }

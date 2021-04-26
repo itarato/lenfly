@@ -141,6 +141,11 @@ ConsumableItem::ConsumableItem(Vector2 v, Texture2D* _texture) : color(WHITE) {
 void ConsumableItem::update() {
   entity.pos.x += entity.v.x;
   entity.pos.y += entity.v.y;
+
+  if (wiggle.enabled) {
+    entity.pos.y += wiggle.update1();
+    entity.pos.x += wiggle.update2();
+  }
 }
 
 bool ConsumableItem::should_die() const { return consumed || out_of_screen(); }

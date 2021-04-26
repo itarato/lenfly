@@ -43,3 +43,30 @@ Color PenaltyColor::tint() {
 }
 
 void PenaltyColor::reset() { counter = 0; }
+
+Wiggle::Wiggle()
+    : enabled(false), size(0.0f), counter_sin(0), counter_cos(0), length(0) {}
+
+void Wiggle::init(float _size, uint32_t _length) {
+  enabled = true;
+  size = _size;
+  length = _length;
+}
+
+float Wiggle::update1() {
+  static const double step = (pi * 2) / length;
+
+  float wiggle = sin(step * counter_sin);
+  counter_sin = (counter_sin + 1) % length;
+
+  return wiggle * size;
+}
+
+float Wiggle::update2() {
+  static const double step = (pi * 2) / length;
+
+  float wiggle = cos(step * counter_cos);
+  counter_cos = (counter_cos + 1) % length;
+
+  return wiggle * size;
+}

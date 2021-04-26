@@ -78,6 +78,7 @@ struct ConsumableItem : public BaseScreenObject {
  public:
   bool consumed;
   int flags;
+  Wiggle wiggle;
 
   ConsumableItem(Vector2 v, Texture2D* texture);
 
