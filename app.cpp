@@ -13,7 +13,6 @@
 #define PLANE_MOVE_V 10
 
 #define MAX_CLOUDS 5
-// Chance in percentage [0..100).
 #define CLOUD_CREATION_CHANCE 50
 #define CLOUD_V_MIN 4.0f
 #define CLOUD_V_MAX 20.0f
@@ -23,7 +22,6 @@
 
 #define MAX_BERRY 4
 #define BERRY_V 10.0f
-// Chance in percentage [0..100).
 #define BERRY_CREATION_CHANCE 30
 #define BERRY_BONUS_CHANCE 50
 #define BERRY_BURST 16
@@ -50,7 +48,7 @@
 
 #define AMMO_CREATION_CHANCE 5
 #define AMMO_V 10
-#define AMMO_INCREASE 15
+#define AMMO_INCREASE 10
 
 #define IMG_VEGETATION "resources/images/vegetation.png"
 #define IMG_MOUNTAINS "resources/images/mountains.png"
@@ -122,6 +120,14 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   SetSoundVolume(sounds["ouch"], 0.8f);
   sounds.insert({"roar", LoadSound("resources/audio/roar.mp3")});
   SetSoundVolume(sounds["roar"], 0.8f);
+  sounds.insert({"pew", LoadSound("resources/audio/dada.mp3")});
+  SetSoundVolume(sounds["pew"], 0.8f);
+  sounds.insert({"boss_shout", LoadSound("resources/audio/ruby.mp3")});
+  SetSoundVolume(sounds["boss_shout"], 0.6f);
+  sounds.insert({"shield", LoadSound("resources/audio/bubble.mp3")});
+  SetSoundVolume(sounds["shield"], 1.0f);
+  sounds.insert({"kwek", LoadSound("resources/audio/frog.mp3")});
+  SetSoundVolume(sounds["kwek"], 0.8f);
 
   srand(time(NULL));
 
@@ -239,7 +245,6 @@ void App::handle_state() {
       if (CheckCollisionRecs(plane_rect, berry.rect())) {
         score += SCORE_BERRY;
         berry.consume();
-        StopSound(sounds["plop"]);
         PlaySound(sounds["plop"]);
 
         if (berry.flags & CONSUMABLE_ITEM_FLAG_BERRY_BONUS) {
@@ -259,7 +264,6 @@ void App::handle_state() {
         if (!plane.shielded()) {
             score += SCORE_POOP;
             plane.penalty_color.activate();
-            StopSound(sounds["ouch"]);
             PlaySound(sounds["ouch"]);
             life_count--;
         }
@@ -288,7 +292,6 @@ void App::handle_state() {
         if (CheckCollisionRecs(plane_rect, life.value().rect())) {
           life.value().consume();
           life_count += 1;
-          StopSound(sounds["roar"]);
           PlaySound(sounds["roar"]);
         }
         if (life.value().should_die()) {
@@ -309,6 +312,7 @@ void App::handle_state() {
       } else {
         if (CheckCollisionRecs(plane_rect, carrot.value().rect())) {
           plane.shield_enable();
+          PlaySound(sounds["shield"]);
           carrot.value().consume();
         }
 
@@ -326,6 +330,7 @@ void App::handle_state() {
       } else {
         if (CheckCollisionRecs(plane.rect(), ammo.value().rect())) {
           ammo_count += AMMO_INCREASE;
+          PlaySound(sounds["kwek"]);
           ammo.value().consume();
         }
         if (ammo.value().should_die()) {
@@ -347,6 +352,7 @@ void App::handle_state() {
         new_bullet.entity.pos.x = plane.entity.pos.x + plane.texture->width;
         new_bullet.entity.pos.y = plane.entity.pos.y + plane.texture->width / 2;
         bullets.push_back(new_bullet);
+        PlaySound(sounds["pew"]);
         ammo_count--;
       }
     }
@@ -360,6 +366,7 @@ void App::handle_state() {
       boss_treat.entity.pos.x = plane.entity.pos.x + plane.texture->width / 2;
       boss_treat.entity.pos.y = plane.entity.pos.y + plane.texture->height - 30;
       boss_treats.push_back(boss_treat);
+      PlaySound(sounds["pew"]);
     }
 
     boss_treats.erase(std::remove_if(boss_treats.begin(), boss_treats.end(),
@@ -371,6 +378,7 @@ void App::handle_state() {
     for (auto& boss_treat : boss_treats) {
       if (CheckCollisionRecs(boss_treat.rect(), boss.rect())) {
         boss_treat.consume();
+        PlaySound(sounds["boss_shout"]);
         boss.feed();
       }
     }
