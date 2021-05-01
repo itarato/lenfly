@@ -84,7 +84,12 @@ void cleanup_dead_consumable_items(std::vector<ConsumableItem>& list) {
 }
 
 App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
-  SetConfigFlags(FLAG_VSYNC_HINT);
+  int window_flags = FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT;
+#ifdef FULLSCREEN
+  window_flags |= FLAG_FULLSCREEN_MODE;
+#endif
+
+  SetConfigFlags(window_flags);
   InitWindow(SCREEN_W, SCREEN_H, "SECRET");
 
   InitAudioDevice();
@@ -123,7 +128,7 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   sounds.insert({"pew", LoadSound("resources/audio/dada.mp3")});
   SetSoundVolume(sounds["pew"], 0.8f);
   sounds.insert({"boss_shout", LoadSound("resources/audio/ruby.mp3")});
-  SetSoundVolume(sounds["boss_shout"], 0.6f);
+  SetSoundVolume(sounds["boss_shout"], 0.4f);
   sounds.insert({"shield", LoadSound("resources/audio/bubble.mp3")});
   SetSoundVolume(sounds["shield"], 1.0f);
   sounds.insert({"kwek", LoadSound("resources/audio/frog.mp3")});
@@ -170,7 +175,7 @@ void App::handle_state() {
   int touch_count = GetTouchPointsCount();
 
   if (state == STATE_MENU) {
-    if (IsKeyPressed(KEY_ENTER) || IsGamepadButtonPressed(0, 7)) {
+    if (is_pressed_fire()) {
       init_game_state();
       return;
     }
@@ -347,7 +352,7 @@ void App::handle_state() {
     }
 
     {  // Bullet shoot.
-      if (ammo_count > 0 && IsGamepadButtonPressed(0, 7)) {
+      if (ammo_count > 0 && is_pressed_fire()) {
         ConsumableItem new_bullet{{BULLET_V, 0.0f}, &textures["bullet"]};
         new_bullet.entity.pos.x = plane.entity.pos.x + plane.texture->width;
         new_bullet.entity.pos.y = plane.entity.pos.y + plane.texture->width / 2;
@@ -359,9 +364,7 @@ void App::handle_state() {
   }
 
   if (state == STATE_BOSS) {
-    int gesture = GetGestureDetected();
-    if (gesture == GESTURE_TAP || IsKeyPressed(KEY_SPACE) ||
-        IsGamepadButtonPressed(0, 7)) {
+    if (is_pressed_fire()) {
       ConsumableItem boss_treat{{0.0f, BOSS_TREAT_V}, &textures["chicken"]};
       boss_treat.entity.pos.x = plane.entity.pos.x + plane.texture->width / 2;
       boss_treat.entity.pos.y = plane.entity.pos.y + plane.texture->height - 30;
@@ -538,9 +541,14 @@ void App::draw() {
 
     DrawFPS(GetScreenWidth() - 128, 8);
 
-    DrawText(TextFormat("Score: %d | Ammo: %d | Life: %d", score, ammo_count,
+    DrawText(TextFormat("Score: %d", score), 8, 8, 64, DARKGRAY);
+    DrawText(TextFormat("Ammo: %d | Life: %d", ammo_count,
                         life_count),
-             8, 8, 64, DARKGRAY);
+             8, 72, 32, DARKGRAY);
+    // DrawText(TextFormat("PAD(0): %d %s", (IsGamepadAvailable(0) ? 1 : 0),
+    // GetGamepadName(0)), 8, 104, 32, RED); DrawText(TextFormat("PAD(1): %d
+    // %s", (IsGamepadAvailable(1) ? 1 : 0), GetGamepadName(1)), 8, 136, 32,
+    // RED);
   }
 }
 
@@ -606,4 +614,9 @@ void App::init_boss_state() {
   ammo.reset();
 
   boss.reset();
+}
+
+bool App::is_pressed_fire() {
+  return GetGestureDetected() == GESTURE_TAP || IsKeyPressed(KEY_SPACE) ||
+         IsGamepadButtonPressed(0, 7);
 }

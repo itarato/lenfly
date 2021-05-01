@@ -56,6 +56,8 @@ class App {
   void init_boss_state();
   void return_game_state();
 
+  bool is_pressed_fire();
+
  public:
   App();
   ~App();
