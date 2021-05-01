@@ -38,6 +38,7 @@ class App {
   std::vector<ConsumableItem> berries;
   std::vector<ConsumableItem> poops;
   std::vector<ConsumableItem> boss_treats;
+  std::vector<ConsumableItem> bullets;
   std::optional<ConsumableItem> life;
   std::optional<ConsumableItem> carrot;
   Boss boss;

@@ -46,6 +46,8 @@
 #define CARROT_V 8
 #define CARROT_CREATION_CHANCE 1
 
+#define BULLET_V 20
+
 #define IMG_VEGETATION "resources/images/vegetation.png"
 #define IMG_MOUNTAINS "resources/images/mountains.png"
 #define IMG_PLANE "resources/images/plane.png"
@@ -58,6 +60,7 @@
 #define IMG_BUBBLE "resources/images/bubble.png"
 #define IMG_CHICKEN "resources/images/chicken.png"
 #define IMG_BOSS "resources/images/boss.png"
+#define IMG_BULLET "resources/images/tp.png"
 
 #define CTRL_SIZE 0.06f
 #define CTRL_MAX_SPEED 13.0f
@@ -105,6 +108,7 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   textures.insert({"bubble", LoadTexture(IMG_BUBBLE)});
   textures.insert({"chicken", LoadTexture(IMG_CHICKEN)});
   textures.insert({"boss", LoadTexture(IMG_BOSS)});
+  textures.insert({"bullet", LoadTexture(IMG_BULLET)});
 
   sounds.insert({"plop", LoadSound("resources/audio/bogyo.mp3")});
   SetSoundVolume(sounds["plop"], 1.0f);
@@ -250,12 +254,20 @@ void App::handle_state() {
             life_count--;
         }
       }
+
+      for (auto& bullet : bullets) {
+        if (CheckCollisionRecs(poop.rect(), bullet.rect())) {
+          poop.consume();
+          bullet.consume();
+        }
+      }
     }
 
     plane.penalty_color.update();
 
     cleanup_dead_consumable_items(berries);
     cleanup_dead_consumable_items(poops);
+    cleanup_dead_consumable_items(bullets);
 
     {  // Life.
       if (score >= next_life_score) {
@@ -302,6 +314,13 @@ void App::handle_state() {
         init_boss_state();
       }
     }
+
+    if (IsGamepadButtonPressed(0, 7)) {
+      ConsumableItem new_bullet{{BULLET_V, 0.0f}, &textures["bullet"]};
+      new_bullet.entity.pos.x = plane.entity.pos.x + plane.texture->width;
+      new_bullet.entity.pos.y = plane.entity.pos.y + plane.texture->width / 2;
+      bullets.push_back(new_bullet);
+    }
   }
   
   if (state == STATE_BOSS) {
@@ -342,6 +361,15 @@ void App::handle_state() {
     if (plane.gravity_enabled) {
       if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
       plane.entity.pos.y += plane.gravity.update();
+    }
+
+    {  // Gamepad.
+      if (IsGamepadAvailable(0)) {
+        float gamepad_joy_x = GetGamepadAxisMovement(0, 0);
+        float gamepad_joy_y = GetGamepadAxisMovement(0, 1);
+        plane.entity.pos.x += gamepad_joy_x * PLANE_MOVE_V * 2.0f;
+        plane.entity.pos.y += gamepad_joy_y * PLANE_MOVE_V * 2.0f;
+      }
     }
 
     if (mouse_enabled) {
@@ -446,6 +474,11 @@ void App::draw() {
       DrawTexture(*poop.texture, poop.entity.pos.x, poop.entity.pos.y, WHITE);
       poop.update();
     }
+    for (auto& bullet : bullets) {
+      DrawTexture(*bullet.texture, bullet.entity.pos.x, bullet.entity.pos.y,
+                  WHITE);
+      bullet.update();
+    }
 
     if (life.has_value()) {
       DrawTexture(*life.value().texture, life.value().entity.pos.x,
@@ -508,6 +541,7 @@ void App::return_game_state() {
 
   berries.clear();
   poops.clear();
+  bullets.clear();
 }
 
 void App::init_menu_state() { state = STATE_MENU; }
@@ -518,6 +552,7 @@ void App::init_boss_state() {
   berries.clear();
   poops.clear();
   clouds.clear();
+  bullets.clear();
 
   life.reset();
   carrot.reset();
