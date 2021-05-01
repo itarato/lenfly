@@ -48,6 +48,10 @@
 
 #define BULLET_V 20
 
+#define AMMO_CREATION_CHANCE 5
+#define AMMO_V 10
+#define AMMO_INCREASE 15
+
 #define IMG_VEGETATION "resources/images/vegetation.png"
 #define IMG_MOUNTAINS "resources/images/mountains.png"
 #define IMG_PLANE "resources/images/plane.png"
@@ -60,7 +64,8 @@
 #define IMG_BUBBLE "resources/images/bubble.png"
 #define IMG_CHICKEN "resources/images/chicken.png"
 #define IMG_BOSS "resources/images/boss.png"
-#define IMG_BULLET "resources/images/tp.png"
+#define IMG_BULLET "resources/images/broccoli.png"
+#define IMG_AMMO "resources/images/ammo.png"
 
 #define CTRL_SIZE 0.06f
 #define CTRL_MAX_SPEED 13.0f
@@ -109,6 +114,7 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
   textures.insert({"chicken", LoadTexture(IMG_CHICKEN)});
   textures.insert({"boss", LoadTexture(IMG_BOSS)});
   textures.insert({"bullet", LoadTexture(IMG_BULLET)});
+  textures.insert({"ammo", LoadTexture(IMG_AMMO)});
 
   sounds.insert({"plop", LoadSound("resources/audio/bogyo.mp3")});
   SetSoundVolume(sounds["plop"], 1.0f);
@@ -133,6 +139,8 @@ App::App() : vegetation(VEGETATION_SPEED), mountains(MOUNTAIN_SPEED) {
 
 void App::reset() {
   score = 0;
+  ammo_count = AMMO_INCREASE;
+
   init_menu_state();
 }
 
@@ -156,8 +164,9 @@ void App::handle_state() {
   int touch_count = GetTouchPointsCount();
 
   if (state == STATE_MENU) {
-    if (IsKeyPressed(KEY_ENTER)) {
+    if (IsKeyPressed(KEY_ENTER) || IsGamepadButtonPressed(0, 7)) {
       init_game_state();
+      return;
     }
 
     if (touch_count > 0) {
@@ -170,6 +179,7 @@ void App::handle_state() {
 
       if (CheckCollisionPointRec(current_touch, play_button_rect)) {
         init_game_state();
+        return;
       }
     }
   }
@@ -308,6 +318,22 @@ void App::handle_state() {
       }
     }
 
+    {  // Ammo.
+      if (!ammo.has_value()) {
+        if (has_chance(AMMO_CREATION_CHANCE)) {
+          ammo = ConsumableItem({-AMMO_V, 0.0f}, &textures["ammo"]);
+        }
+      } else {
+        if (CheckCollisionRecs(plane.rect(), ammo.value().rect())) {
+          ammo_count += AMMO_INCREASE;
+          ammo.value().consume();
+        }
+        if (ammo.value().should_die()) {
+          ammo.reset();
+        }
+      }
+    }
+
     {  // Boss fight.
       if (score >= boss_fight_score) {
         boss_fight_score += BOSS_FIGHT_SCORE_JUMP;
@@ -315,17 +341,21 @@ void App::handle_state() {
       }
     }
 
-    if (IsGamepadButtonPressed(0, 7)) {
-      ConsumableItem new_bullet{{BULLET_V, 0.0f}, &textures["bullet"]};
-      new_bullet.entity.pos.x = plane.entity.pos.x + plane.texture->width;
-      new_bullet.entity.pos.y = plane.entity.pos.y + plane.texture->width / 2;
-      bullets.push_back(new_bullet);
+    {  // Bullet shoot.
+      if (ammo_count > 0 && IsGamepadButtonPressed(0, 7)) {
+        ConsumableItem new_bullet{{BULLET_V, 0.0f}, &textures["bullet"]};
+        new_bullet.entity.pos.x = plane.entity.pos.x + plane.texture->width;
+        new_bullet.entity.pos.y = plane.entity.pos.y + plane.texture->width / 2;
+        bullets.push_back(new_bullet);
+        ammo_count--;
+      }
     }
   }
-  
+
   if (state == STATE_BOSS) {
     int gesture = GetGestureDetected();
-    if (gesture == GESTURE_TAP || IsKeyPressed(KEY_SPACE)) {
+    if (gesture == GESTURE_TAP || IsKeyPressed(KEY_SPACE) ||
+        IsGamepadButtonPressed(0, 7)) {
       ConsumableItem boss_treat{{0.0f, BOSS_TREAT_V}, &textures["chicken"]};
       boss_treat.entity.pos.x = plane.entity.pos.x + plane.texture->width / 2;
       boss_treat.entity.pos.y = plane.entity.pos.y + plane.texture->height - 30;
@@ -492,10 +522,17 @@ void App::draw() {
       carrot.value().update();
     }
 
+    if (ammo.has_value()) {
+      DrawTexture(*ammo.value().texture, ammo.value().entity.pos.x,
+                  ammo.value().entity.pos.y, WHITE);
+      ammo.value().update();
+    }
+
     DrawFPS(GetScreenWidth() - 128, 8);
 
-    DrawText(TextFormat("Score: %d | Life: %d", score, life_count), 8, 8, 64,
-             DARKGRAY);
+    DrawText(TextFormat("Score: %d | Ammo: %d | Life: %d", score, ammo_count,
+                        life_count),
+             8, 8, 64, DARKGRAY);
   }
 }
 
@@ -537,6 +574,7 @@ void App::return_game_state() {
   state = STATE_GAME;
   life.reset();
   carrot.reset();
+  ammo.reset();
   berry_burst = 0;
 
   berries.clear();
@@ -557,6 +595,7 @@ void App::init_boss_state() {
   life.reset();
   carrot.reset();
   plane.reset();
+  ammo.reset();
 
   boss.reset();
 }

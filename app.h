@@ -31,6 +31,7 @@ class App {
   int next_life_score;
   int berry_burst;
   int boss_fight_score;
+  int ammo_count;
 
   std::map<std::string, Texture2D> textures;
 
@@ -41,6 +42,8 @@ class App {
   std::vector<ConsumableItem> bullets;
   std::optional<ConsumableItem> life;
   std::optional<ConsumableItem> carrot;
+  std::optional<ConsumableItem> ammo;
+
   Boss boss;
 
   std::map<std::string, Sound> sounds;
