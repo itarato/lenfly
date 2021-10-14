@@ -172,7 +172,7 @@ void App::run() {
 }
 
 void App::handle_state() {
-  int touch_count = GetTouchPointsCount();
+  int touch_count = GetTouchPointCount();
 
   if (state == STATE_MENU) {
     if (is_pressed_fire()) {
