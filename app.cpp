@@ -194,7 +194,7 @@ void App::handle_state() {
       }
     }
   }
-  
+
   if (state == STATE_GAME) {
     UpdateMusicStream(background_music);
     UpdateMusicStream(engine_sound);
@@ -267,10 +267,10 @@ void App::handle_state() {
         poop.consume();
 
         if (!plane.shielded()) {
-            score += SCORE_POOP;
-            plane.penalty_color.activate();
-            PlaySound(sounds["ouch"]);
-            life_count--;
+          score += SCORE_POOP;
+          plane.penalty_color.activate();
+          PlaySound(sounds["ouch"]);
+          life_count--;
         }
       }
 
@@ -398,7 +398,7 @@ void App::handle_state() {
     if (IsKeyDown(KEY_RIGHT)) plane.entity.pos.x += PLANE_MOVE_V;
     if (IsKeyPressed(KEY_G)) plane.gravity_enabled = !plane.gravity_enabled;
     if (IsKeyPressed(KEY_M)) mouse_enabled = !mouse_enabled;
-    
+
     if (plane.gravity_enabled) {
       if (IsKeyDown(KEY_SPACE)) plane.gravity.boost(10.0f);
       plane.entity.pos.y += plane.gravity.update();
@@ -425,11 +425,11 @@ void App::handle_state() {
           plane.entity.pos.x += std::max(
               -CTRL_MAX_SPEED,
               std::min(CTRL_MAX_SPEED,
-                        (current_touch.x - last_touch.value().x) / 4.0f));
+                       (current_touch.x - last_touch.value().x) / 4.0f));
           plane.entity.pos.y += std::max(
               -CTRL_MAX_SPEED,
               std::min(CTRL_MAX_SPEED,
-                        (current_touch.y - last_touch.value().y) / 4.0f));
+                       (current_touch.y - last_touch.value().y) / 4.0f));
         }
       }
     }
@@ -542,9 +542,8 @@ void App::draw() {
     DrawFPS(GetScreenWidth() - 128, 8);
 
     DrawText(TextFormat("Score: %d", score), 8, 8, 64, DARKGRAY);
-    DrawText(TextFormat("Ammo: %d | Life: %d", ammo_count,
-                        life_count),
-             8, 72, 32, DARKGRAY);
+    DrawText(TextFormat("Ammo: %d | Life: %d", ammo_count, life_count), 8, 72,
+             32, DARKGRAY);
     // DrawText(TextFormat("PAD(0): %d %s", (IsGamepadAvailable(0) ? 1 : 0),
     // GetGamepadName(0)), 8, 104, 32, RED); DrawText(TextFormat("PAD(1): %d
     // %s", (IsGamepadAvailable(1) ? 1 : 0), GetGamepadName(1)), 8, 136, 32,
