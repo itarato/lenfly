@@ -2,4 +2,5 @@ libs/*
 *.o
 main
 .vscode
-android.raylib_game
+android.*
+*.apk

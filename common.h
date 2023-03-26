@@ -1,5 +1,7 @@
 #pragma once
 
+#define ANDROID_BUTTON_TTL 8
+
 #if defined(PLATFORM_ANDROID)
 
 #define SCREEN_W 0

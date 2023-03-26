@@ -32,6 +32,7 @@ class App {
   int berry_burst;
   int boss_fight_score;
   int ammo_count;
+  unsigned char android_btrl_button_life = 0;
 
   std::map<std::string, Texture2D> textures;
 

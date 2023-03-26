@@ -62,7 +62,7 @@ ANDROID_BUILD_TOOLS    ?= $(ANDROID_HOME)/build-tools/29.0.3
 ANDROID_PLATFORM_TOOLS  = $(ANDROID_HOME)/platform-tools
 
 # Android project configuration variables
-PROJECT_NAME           ?= raylib_game
+PROJECT_NAME           ?= lenfly
 PROJECT_LIBRARY_NAME   ?= main
 PROJECT_BUILD_ID       ?= android
 PROJECT_BUILD_PATH     ?= $(PROJECT_BUILD_ID).$(PROJECT_NAME)
@@ -77,14 +77,17 @@ NATIVE_APP_GLUE_PATH    = $(ANDROID_NDK)/sources/android/native_app_glue
 PROJECT_SOURCE_DIRS     = $(sort $(dir $(PROJECT_SOURCE_FILES)))
 
 # Android app configuration variables
-APP_LABEL_NAME         ?= rGame
-APP_COMPANY_NAME       ?= raylib
-APP_PRODUCT_NAME       ?= rgame
-APP_VERSION_CODE       ?= 1
-APP_VERSION_NAME       ?= 1.0
-APP_ICON_LDPI          ?= $(RAYLIB_PATH)/logo/raylib_36x36.png
-APP_ICON_MDPI          ?= $(RAYLIB_PATH)/logo/raylib_48x48.png
-APP_ICON_HDPI          ?= $(RAYLIB_PATH)/logo/raylib_72x72.png
+APP_LABEL_NAME         ?= LenFly
+APP_COMPANY_NAME       ?= itarato
+APP_PRODUCT_NAME       ?= lenfly
+APP_VERSION_CODE       ?= 2
+APP_VERSION_NAME       ?= 2.0
+APP_ICON_LDPI ?= resources/images/logo-36.png
+APP_ICON_MDPI ?= resources/images/logo-48.png
+APP_ICON_HDPI ?= resources/images/logo-72.png
+APP_ICON_XHDPI ?= resources/images/logo-96.png
+APP_ICON_XXHDPI ?= resources/images/logo-144.png
+APP_ICON_XXXHDPI ?= resources/images/logo-192.png
 APP_SCREEN_ORIENTATION ?= landscape
 APP_KEYSTORE_PASS      ?= raylib
 
@@ -351,7 +354,7 @@ compile_native_app_glue:
 
 # Compile project code into a shared library: lib/lib$(PROJECT_LIBRARY_NAME).so
 compile_project_code: $(OBJS)
-	$(CC) -o $(PROJECT_BUILD_PATH)/lib/$(ANDROID_ARCH_NAME)/lib$(PROJECT_LIBRARY_NAME).so $(OBJS) -shared $(INCLUDE_PATHS) $(LDFLAGS) $(LDLIBS)
+	$(CC) -o $(PROJECT_BUILD_PATH)/lib/$(ANDROID_ARCH_NAME)/lib$(PROJECT_LIBRARY_NAME).so $(OBJS) -DPLATFORM_ANDROID -shared $(INCLUDE_PATHS) $(LDFLAGS) $(LDLIBS)
 
 # Compile all .c files required into object (.o) files
 # NOTE: Those files will be linked into a shared library

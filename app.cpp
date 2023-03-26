@@ -173,6 +173,7 @@ void App::run() {
 
 void App::handle_state() {
   int touch_count = GetTouchPointCount();
+  if (android_btrl_button_life > 0) android_btrl_button_life--;
 
   if (state == STATE_MENU) {
     if (is_pressed_fire()) {
@@ -539,7 +540,7 @@ void App::draw() {
       ammo.value().update();
     }
 
-    DrawFPS(GetScreenWidth() - 128, 8);
+    // DrawFPS(GetScreenWidth() - 128, 8);
 
     DrawText(TextFormat("Score: %d", score), 8, 8, 64, DARKGRAY);
     DrawText(TextFormat("Ammo: %d | Life: %d", ammo_count, life_count), 8, 72,
@@ -616,6 +617,18 @@ void App::init_boss_state() {
 }
 
 bool App::is_pressed_fire() {
-  return GetGestureDetected() == GESTURE_TAP || IsKeyPressed(KEY_SPACE) ||
-         IsGamepadButtonPressed(0, 7);
+  if (GetGestureDetected() == GESTURE_TAP) return true;
+  if (IsKeyPressed(KEY_SPACE)) return true;
+
+#if defined(PLATFORM_ANDROID)
+  if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN) &&
+      android_btrl_button_life == 0) {
+    android_btrl_button_life = ANDROID_BUTTON_TTL;
+    return true;
+  }
+#else
+  if (IsGamepadButtonPressed(0, GAMEPAD_BUTTON_RIGHT_FACE_DOWN)) return true;
+#endif
+
+  return false;
 }
